@@ -21,18 +21,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.kswmd.whatsapptool.contacts;
+package de.kswmd.whatsapptool.cli;
 
-import java.util.List;
+import de.kswmd.whatsapptool.contacts.MessageDatabase;
+import de.kswmd.whatsapptool.quartz.ScheduleManager;
+import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  *
  * @author Kai Denzel
  */
-public interface MessageDatabase {
+public class CommandReloadNotifications extends Command{
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final MessageDatabase messageDatabase;
     
-    public void loadEntities() throws Exception;
-    
-    public List<Entity> getEntities();
+    public CommandReloadNotifications(final MessageDatabase messageDatabase) {
+        super(COMMAND_RELOAD_NOTIFICATIONS_JOB, "Reloads the notifications.xml with all its Triggers.");
+        this.messageDatabase = messageDatabase;
+    }
+
+    @Override
+    public Optional<Object> execute(Object parameters) {
+        ScheduleManager manager = ScheduleManager.getInstance();
+        try {
+            messageDatabase.loadEntities();
+            manager.scheduleMessagesJob(messageDatabase.getEntities());
+            Console.writeLine("Successfully scheduled the job.");
+        }
+        catch (Exception ex) {
+            LOGGER.error("Couldn't create CronJob for notifications.",ex);
+        }
+        return Optional.empty();
+    }
     
 }

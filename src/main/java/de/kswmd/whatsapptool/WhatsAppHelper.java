@@ -35,8 +35,8 @@ import org.openqa.selenium.WebElement;
 public class WhatsAppHelper {
 
     public enum Emoji {
-        MIDDLE_FINGER(":middle" + Keys.chord(Keys.ENTER)),
-        GRINNING_FACE(":grinning" + Keys.chord(Keys.ENTER));
+        MIDDLE_FINGER(":middle" + Keys.ENTER),
+        GRINNING_FACE(":grinning face with " + Keys.ENTER);
 
         private final String sequence;
 

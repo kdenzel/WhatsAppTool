@@ -15,7 +15,7 @@
                 <exec.appArgs>--withGui --browser chrome --vv</exec.appArgs>
                 <exec.mainClass>${packageClassName}</exec.mainClass>
                 <exec.executable>java</exec.executable>
-                <jshell.run.enable>true</jshell.run.enable>
+                
             </properties>
         </action>
         <action>
@@ -34,7 +34,7 @@
                 <exec.mainClass>${packageClassName}</exec.mainClass>
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
-                <jshell.run.enable>true</jshell.run.enable>
+                
             </properties>
         </action>
         <action>

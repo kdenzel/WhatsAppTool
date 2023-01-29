@@ -25,7 +25,6 @@ package de.kswmd.whatsapptool.contacts;
 
 import java.text.ParseException;
 import org.quartz.CronExpression;
-import org.quartz.CronScheduleBuilder;
 
 /**
  *
@@ -37,7 +36,9 @@ public final class Message {
      * Can be a Name (For example a group name) or Phonenumber.
      */
     private CronExpression cronExpression;
+    private String cronExpressionString;
     private String content;
+    private Entity entity;
 
     public Message() {
     }
@@ -51,8 +52,13 @@ public final class Message {
         return cronExpression;
     }
 
+    public String getCronExpressionString() {
+        return cronExpressionString;
+    }
+
     public void setCronExpression(String cronExpression) throws ParseException {
         this.cronExpression = new CronExpression(cronExpression);
+        this.cronExpressionString = cronExpression;
     }
 
     public String getContent() {
@@ -61,6 +67,14 @@ public final class Message {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public void setEntity(Entity entity) {
+        this.entity = entity;
+    }
+
+    public Entity getEntity() {
+        return entity;
     }
 
 }

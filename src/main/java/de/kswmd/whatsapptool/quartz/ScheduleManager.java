@@ -24,12 +24,17 @@
 package de.kswmd.whatsapptool.quartz;
 
 import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.contacts.Entity;
+import de.kswmd.whatsapptool.contacts.Message;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -43,22 +48,22 @@ import org.quartz.impl.StdSchedulerFactory;
  * @author Kai Denzel
  */
 public class ScheduleManager {
-    
+
     private Logger LOGGER = LogManager.getLogger();
-    
+
     private Scheduler scheduler = null;
     private static ScheduleManager instance;
-    
+
     private ScheduleManager() {
     }
-    
+
     public static ScheduleManager getInstance() {
         if (instance == null) {
             instance = new ScheduleManager();
         }
         return instance;
     }
-    
+
     public boolean start() {
         try {
             if (scheduler == null || !scheduler.isStarted()) {
@@ -66,12 +71,13 @@ public class ScheduleManager {
                 scheduler.start();
                 return true;
             }
-        } catch (SchedulerException ex) {
+        }
+        catch (SchedulerException ex) {
             LOGGER.error("Couldn't initialize Scheduler...", ex);
         }
         return false;
     }
-    
+
     public boolean stop() {
         try {
             if (scheduler != null && !scheduler.isShutdown()) {
@@ -79,17 +85,18 @@ public class ScheduleManager {
                 scheduler.shutdown(true);
                 return true;
             }
-        } catch (SchedulerException ex) {
+        }
+        catch (SchedulerException ex) {
             LOGGER.error("Couldn't shutdown Scheduler...", ex);
         }
         return false;
     }
-    
+
     public void scheduleMaintenanceJob(WhatsAppClient whatsAppClient) {
         JobDetail job = newJob(MaintenanceJob.class)
                 .withIdentity("statusReportJob", "maintenance")
                 .build();
-        
+
         Trigger trigger = newTrigger()
                 .withIdentity("statusReportTrigger", "maintenance")
                 .withSchedule(cronSchedule(" 0 30 3 * * ?"))
@@ -100,24 +107,66 @@ public class ScheduleManager {
         try {
             // Tell quartz to schedule the job using our trigger
             scheduler.scheduleJob(job, trigger);
-        } catch (SchedulerException ex) {
+        }
+        catch (SchedulerException ex) {
             LOGGER.error("Couldn't start Job", ex);
         }
         LOGGER.info("Next maintenance time = " + SimpleDateFormat.getDateTimeInstance().format(trigger.getNextFireTime()));
     }
-    
+
+    public void scheduleMessagesJob(List<Entity> entities) {
+        JobDetail handleCronMessagesJob = newJob(HandleCronMessageJob.class)
+                .withIdentity("messagesJob", "contactPersons")
+                .build();
+        try {
+            Set<Trigger> triggers = new HashSet<>();
+            for (Entity e : entities) {
+                for (Message m : e.getMessages()) {
+                    JobDataMap jdm = new JobDataMap();
+                    jdm.put(HandleCronMessageJob.KEY_MESSAGE, m);
+                    Trigger trigger = newTrigger()
+                            .withIdentity("messagesTrigger_" + e.getIdentifier() + "_" + e.getMessages().indexOf(m), "messagesTrigger")
+                            .withSchedule(cronSchedule(m.getCronExpression()))
+                            .forJob(handleCronMessagesJob)
+                            .usingJobData(jdm)
+                            .build();
+                    triggers.add(trigger);
+                }
+            }
+            scheduler.scheduleJob(handleCronMessagesJob, triggers, true);
+        }
+        catch (SchedulerException ex) {
+            LOGGER.error("Couldn't schedule Job.", ex);
+            unscheduleMessagesJob();
+        }
+    }
+
+    public boolean unscheduleMessagesJob() {
+        try {
+            return scheduler.deleteJob(JobKey.jobKey("messagesJob", "contactPersons"));
+        }
+        catch (SchedulerException ex) {
+            LOGGER.debug("Couldn't unschedule messages job.", ex);
+        }
+        return false;
+    }
+
     public void pauseAllJobs() {
         try {
             scheduler.pauseJob(JobKey.jobKey("statusReportJob", "maintenance"));
-        } catch (SchedulerException ex) {
+            scheduler.pauseJob(JobKey.jobKey("messagesJob", "contactPersons"));
+        }
+        catch (SchedulerException ex) {
             LOGGER.error("Couldn't unschedule Job", ex);
         }
     }
-    
+
     public void resumeAllJobs() {
         try {
             scheduler.resumeJob(JobKey.jobKey("statusReportJob", "maintenance"));
-        } catch (SchedulerException ex) {
+            scheduler.resumeJob(JobKey.jobKey("messagesJob", "contactPersons"));
+        }
+        catch (SchedulerException ex) {
             LOGGER.error("Couldn't unschedule Job", ex);
         }
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contacts>
-	<Entity>
+	<entity>
 		<identifier>${number_or_name_of_person_or_group}</identifier>
 		<message>
 			<cronExpression>0 0 0 1 JAN ? *</cronExpression>
@@ -10,5 +10,5 @@
 			<cronExpression>0 0 20 24 DEC ? *</cronExpression>
 			<content>Merry Christmas</content>
 		</message>
-	</Entity>
+	</entity>
 </contacts>

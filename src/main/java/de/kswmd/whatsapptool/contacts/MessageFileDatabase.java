@@ -23,11 +23,9 @@
  */
 package de.kswmd.whatsapptool.contacts;
 
-import de.kswmd.whatsapptool.cli.Console;
 import de.kswmd.whatsapptool.utils.PathResolver;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
@@ -66,13 +64,13 @@ public final class MessageFileDatabase implements MessageDatabase {
 
     private final File xmlFile;
     private final DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-    private DocumentBuilder builder;
+    private final DocumentBuilder builder;
     private final XPath xPath = XPathFactory.newInstance().newXPath();
+    private final List<Entity> entities = new ArrayList<>();
 
     private MessageFileDatabase(String filePath) throws SAXException, IOException, ParserConfigurationException {
         createExampleFile(PathResolver.getConfigDir().toString());
         this.xmlFile = new File(filePath);
-        validateXMLSchema(xmlFile);
         builder = builderFactory.newDocumentBuilder();
     }
 
@@ -86,7 +84,8 @@ public final class MessageFileDatabase implements MessageDatabase {
         try {
             FileUtils.copyURLToFile(inputUrl, dest);
             return true;
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
         }
         return false;
     }
@@ -106,48 +105,33 @@ public final class MessageFileDatabase implements MessageDatabase {
 
     @Override
     public List<Entity> getEntities() {
-        List<Entity> entities = new ArrayList<>();
-        String cronExpression = null;
-        String identifier = null;
-        int messageIndex = 0;
+        return entities;
+    }
+
+    @Override
+    public void loadEntities() throws SAXException, IOException, XPathExpressionException, ParseException {
+        entities.clear();
+        validateXMLSchema(xmlFile);
         try (FileInputStream fileIS = new FileInputStream(this.xmlFile)) {
             Document xmlDocument = builder.parse(fileIS);
-            NodeList entityNodes = (NodeList) xPath.compile("/contacts/Entity").evaluate(xmlDocument, XPathConstants.NODESET);
+            NodeList entityNodes = (NodeList) xPath.compile("/contacts/entity").evaluate(xmlDocument, XPathConstants.NODESET);
             for (int i = 0; i < entityNodes.getLength(); i++) {
                 Entity entity = new Entity();
                 Node entityNode = entityNodes.item(i);
                 String id = (String) xPath.compile("./identifier").evaluate(entityNode, XPathConstants.STRING);
                 entity.setIdentifier(id);
-                identifier = id;
                 NodeList messageNodes = (NodeList) xPath.compile("./message").evaluate(entityNode, XPathConstants.NODESET);
                 for (int j = 0; j < messageNodes.getLength(); j++) {
-                    messageIndex = j + 1;
-                    Node messageNode = messageNodes.item(i);
+                    Node messageNode = messageNodes.item(j);
                     Message message = new Message();
-                    cronExpression = (String) xPath.compile("./cronExpression").evaluate(messageNode, XPathConstants.STRING);
+                    String cronExpression = (String) xPath.compile("./cronExpression").evaluate(messageNode, XPathConstants.STRING);
                     message.setCronExpression(cronExpression);
                     message.setContent((String) xPath.compile("./content").evaluate(messageNode, XPathConstants.STRING));
+                    message.setEntity(entity);
                     entity.addMessage(message);
                 }
                 entities.add(entity);
             }
-        } catch (FileNotFoundException ex) {
-            Console.writeLine("The file " + xmlFile.getAbsolutePath() + " was not found.");
-            LOGGER.debug("No such file...", ex);
-        } catch (SAXException ex) {
-            Console.writeLine("Something unexpected happened.");
-            LOGGER.debug("SAXException...", ex);
-        } catch (IOException ex) {
-            Console.writeLine("Something unexpected happened.");
-            LOGGER.debug("IOException...", ex);
-        } catch (XPathExpressionException ex) {
-            Console.writeLine("Something unexpected happened.");
-            LOGGER.debug("No valid xpath expression...", ex);
-        } catch (ParseException ex) {
-            Console.writeLine("The chron expression '" + cronExpression + "' in message number " + messageIndex + " with identifier " + identifier + "was invalid.");
-            LOGGER.debug("Cronexpresion invalid...", ex);
         }
-        return entities;
     }
-
 }

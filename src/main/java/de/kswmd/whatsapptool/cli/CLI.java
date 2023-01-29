@@ -24,16 +24,21 @@
 package de.kswmd.whatsapptool.cli;
 
 import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.contacts.MessageFileDatabase;
 import de.kswmd.whatsapptool.utils.ProgressBar;
+import de.kswmd.whatsapptool.utils.Settings;
+import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.xml.parsers.ParserConfigurationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jline.reader.UserInterruptException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -63,8 +68,11 @@ public class CLI {
      * The CLI-Constructor.
      *
      * @param client
+     * @throws org.xml.sax.SAXException
+     * @throws java.io.IOException
+     * @throws javax.xml.parsers.ParserConfigurationException
      */
-    public CLI(final WhatsAppClient client) {
+    public CLI(final WhatsAppClient client) throws SAXException, IOException, ParserConfigurationException {
         this.whatsAppClient = client;
         commands.add(new CommandExit(this));
         commands.add(new CommandHelp(commands));
@@ -83,6 +91,7 @@ public class CLI {
         commands.add(new CommandUpdate(client));
         commands.add(new CommandClear());
         commands.add(new CommandRefresh(client));
+        commands.add(new CommandReloadNotifications(MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile())));
         Console.getInstance().initLineReader(
                 commands
                         .stream()

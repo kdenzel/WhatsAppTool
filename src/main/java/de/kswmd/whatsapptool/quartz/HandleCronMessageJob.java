@@ -21,18 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.kswmd.whatsapptool.contacts;
+package de.kswmd.whatsapptool.quartz;
 
-import java.util.List;
+import de.kswmd.whatsapptool.contacts.Message;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 /**
  *
  * @author Kai Denzel
  */
-public interface MessageDatabase {
+@DisallowConcurrentExecution
+public class HandleCronMessageJob implements Job{
+
+    public static final String KEY_MESSAGE = "message";
     
-    public void loadEntities() throws Exception;
+    private Logger LOGGER = LogManager.getLogger();
     
-    public List<Entity> getEntities();
+    @Override
+    public void execute(JobExecutionContext jec) throws JobExecutionException {
+        Message m = (Message) jec.getTrigger().getJobDataMap().get(KEY_MESSAGE);
+        LOGGER.info(m.getEntity().getIdentifier()+ ": " + m.getContent());
+    }
     
 }

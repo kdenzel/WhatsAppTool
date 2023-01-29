@@ -24,6 +24,7 @@
 package de.kswmd.whatsapptool.quartz;
 
 import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
 import de.kswmd.whatsapptool.utils.Settings;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -57,6 +58,7 @@ public class MaintenanceJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        LOGGER.info("Starting MaintenanceJob.");
         try {
             LocalDateTime now = LocalDateTime.now();
             String adminPhoneNumber = StringUtils.trimToNull(Settings.getInstance().getAdminPhoneNumber());
@@ -69,19 +71,21 @@ public class MaintenanceJob implements Job {
                 String hostname = "unknown";
                 try {
                     hostname = InetAddress.getLocalHost().getHostName();
-                } catch (UnknownHostException ex) {
                 }
-                sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
-                sb.append("Hostname: ");
-                sb.append(hostname);
-                sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
-                sb.append("Status OK :grinning face with ");
-                sb.append(Keys.ENTER);
+                catch (UnknownHostException ex) {
+                    LOGGER.trace("Hostname not found...", ex);
+                }
+                sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER))
+                        .append("Hostname: ")
+                        .append(hostname)
+                        .append(Keys.chord(Keys.SHIFT, Keys.ENTER))
+                        .append("Status OK ")
+                        .append(Emoji.GRINNING_FACE.getSequence());
                 client.setText(sb.toString());
                 client.send(3);
-
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             LOGGER.error("Fire Maintenance job failed...", ex);
         }
     }
