@@ -23,6 +23,7 @@
  */
 package de.kswmd.whatsapptool.cli;
 
+import de.kswmd.whatsapptool.WhatsAppClient;
 import de.kswmd.whatsapptool.contacts.MessageDatabase;
 import de.kswmd.whatsapptool.quartz.ScheduleManager;
 import java.util.Optional;
@@ -33,14 +34,16 @@ import org.apache.logging.log4j.Logger;
  *
  * @author Kai Denzel
  */
-public class CommandReloadNotifications extends Command{
+public class CommandReloadNotifications extends Command {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final MessageDatabase messageDatabase;
-    
-    public CommandReloadNotifications(final MessageDatabase messageDatabase) {
+    private final WhatsAppClient client;
+
+    public CommandReloadNotifications(final MessageDatabase messageDatabase, final WhatsAppClient client) {
         super(COMMAND_RELOAD_NOTIFICATIONS_JOB, "Reloads the notifications.xml with all its Triggers.");
         this.messageDatabase = messageDatabase;
+        this.client = client;
     }
 
     @Override
@@ -48,13 +51,14 @@ public class CommandReloadNotifications extends Command{
         ScheduleManager manager = ScheduleManager.getInstance();
         try {
             messageDatabase.loadEntities();
-            manager.scheduleMessagesJob(messageDatabase.getEntities());
+            manager.scheduleMessagesJob(messageDatabase.getEntities(), client);
+            manager.resumeAllJobs();
             Console.writeLine("Successfully scheduled the job.");
         }
         catch (Exception ex) {
-            LOGGER.error("Couldn't create CronJob for notifications.",ex);
+            LOGGER.error("Couldn't create CronJob for notifications.", ex);
         }
         return Optional.empty();
     }
-    
+
 }

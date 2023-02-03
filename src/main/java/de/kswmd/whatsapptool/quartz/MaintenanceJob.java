@@ -26,8 +26,11 @@ package de.kswmd.whatsapptool.quartz;
 import de.kswmd.whatsapptool.WhatsAppClient;
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
 import de.kswmd.whatsapptool.utils.Settings;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
@@ -48,9 +51,10 @@ public class MaintenanceJob implements Job {
 
     private final Logger LOGGER = LogManager.getLogger();
 
-    final static String WEBDRIVER_FACTORY = "webdriverfactory";
-    final static String WEBDRIVER = "webdriver";
     final static String WHATSAPP_CLIENT = "whatsappclient";
+    final DateTimeFormatter DATE_TIME_FORMAT_LOCALE_DE = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss");
+    final DateTimeFormatter DATE_FORMAT_YYYY_MM = DateTimeFormatter.ofPattern("yyyy-MM");
+    final DateTimeFormatter DATE_FORMAT_MM_dd_YYYY = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
     public MaintenanceJob() {
         //LOGGER.info("Constructor called...");
@@ -67,7 +71,7 @@ public class MaintenanceJob implements Job {
                 client.open(adminPhoneNumber);
                 client.waitTilTextIsAvailable(10);
                 StringBuilder sb = new StringBuilder();
-                sb.append(now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss")));
+                sb.append(now.format(DATE_TIME_FORMAT_LOCALE_DE));
                 String hostname = "unknown";
                 try {
                     hostname = InetAddress.getLocalHost().getHostName();
@@ -81,6 +85,23 @@ public class MaintenanceJob implements Job {
                         .append(Keys.chord(Keys.SHIFT, Keys.ENTER))
                         .append("Status OK ")
                         .append(Emoji.GRINNING_FACE.getSequence());
+                try {
+                    LocalDateTime yesterday = now.minusDays(1);
+                    String logFilePath = System.getProperty("logFilePath");
+                    String fileToRead = yesterday.format(DATE_FORMAT_YYYY_MM) + "/" + yesterday.format(DATE_FORMAT_MM_dd_YYYY) + ".message-job-error-log.txt";
+                    String content = Files.readString(Paths.get(logFilePath + "/" + fileToRead));
+                    content = content.replaceAll("\n", Keys.chord(Keys.SHIFT, Keys.ENTER));
+                    sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
+                    sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
+                    if (!StringUtils.trimToEmpty(content).isEmpty()) {
+                        sb.append(content);
+                    } else {
+                        sb.append("No errors logged.");
+                    }
+                }
+                catch (IOException ex) {
+                    LOGGER.error("Couldn't read message-job-error-log.txt...", ex);
+                }
                 client.setText(sb.toString());
                 client.send(3);
             }

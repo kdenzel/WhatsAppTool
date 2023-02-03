@@ -102,7 +102,8 @@ public class WhatsAppClientTest {
             try {
                 client.setText(emoji);
                 Assertions.assertTrue(true);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 LOGGER.error("", ex);
                 Assertions.assertTrue(false);
             }

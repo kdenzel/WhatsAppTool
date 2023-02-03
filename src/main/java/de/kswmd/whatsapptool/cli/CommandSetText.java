@@ -36,9 +36,9 @@ import org.apache.logging.log4j.Logger;
 public class CommandSetText extends Command {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    
+
     private final WhatsAppClient client;
-    
+
     public CommandSetText(WhatsAppClient client) {
         super(COMMAND_SET_TEXT, "Sets the text of the textfield.");
         this.client = client;

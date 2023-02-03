@@ -36,9 +36,9 @@ public final class Environment {
     private Properties properties = new Properties();
 
     private static Environment instance;
-    
+
     public static synchronized Environment getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new Environment();
         }
         return instance;
@@ -48,15 +48,16 @@ public final class Environment {
         try {
             InputStream is = getClass().getResourceAsStream("/environment.properties");
             properties.load(is);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
         }
     }
-    
+
     public synchronized String getProperty(String key) {
         return properties.getProperty(key);
     }
-    
-    public synchronized Properties getProperties(){
+
+    public synchronized Properties getProperties() {
         return properties;
     }
 

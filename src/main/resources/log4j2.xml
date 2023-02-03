@@ -17,8 +17,23 @@
                 <!--<SizeBasedTriggeringPolicy size="250 MB"/>-->
             </Policies>
         </RollingFile>
+        <RollingFile name="HandleCronMessageJob" fileName="${sys:logFilePath}/message-job-error-log.txt"
+                     filePattern="${sys:logFilePath}/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}.message-job-error-log.txt">
+            <PatternLayout>
+                <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <!--<SizeBasedTriggeringPolicy size="250 MB"/>-->
+            </Policies>
+        </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger name="de.kswmd.whatsapptool.quartz.HandleCronMessageJob" level="error" additivity="false">
+            <AppenderRef ref="advancedConsole"/>
+            <AppenderRef ref="HandleCronMessageJob"/>
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
         <Logger name="de.kswmd.whatsapptool" level="info" additivity="false">
             <AppenderRef ref="advancedConsole"/>
             <AppenderRef ref="RollingFile"/>

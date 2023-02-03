@@ -23,8 +23,16 @@
  */
 package de.kswmd.whatsapptool;
 
+import de.kswmd.whatsapptool.contacts.ChatListBean;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -33,6 +41,8 @@ import org.openqa.selenium.WebElement;
  * @author Kai Denzel
  */
 public class WhatsAppHelper {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public enum Emoji {
         MIDDLE_FINGER(":middle" + Keys.ENTER),
@@ -57,6 +67,82 @@ public class WhatsAppHelper {
         JavascriptExecutor executor = (JavascriptExecutor) driver;
         Object elementAttributes = executor.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", element);
         return elementAttributes.toString();
+    }
+
+    public static List<ChatListBean> generateFromWebElement(WebElement chatList) {
+        List<WebElement> listItems = chatList.findElements(By.xpath(".//div[contains(@data-testid,'list-item-')]"));
+        List<ChatListBean> list = new ArrayList<>(listItems.size());
+        for (WebElement listItem : listItems) {
+            try {
+                ChatListBean bean = null;
+                String sort = listItem.getAttribute("style");
+                sort = sort.replaceAll("^.*translateY[(](.*)px[)].*$", "$1");
+                //Check if list-item is a header element
+                try {
+                    WebElement header = listItem.findElement(By.xpath(".//div[@data-testid='section-header']"));
+                    bean = new ChatListBean(ChatListBean.Type.HEADER);
+                    bean.setTitle(header.getText());
+                } catch (NoSuchElementException ex) {
+                    LOGGER.trace("List Item has no header section...", ex);
+                }
+                //If it is null
+                if (bean == null) {
+                    String time = null;
+                    try {
+                        WebElement timeDiv = listItem.findElement(By.cssSelector("div.Dvjym"));
+                        time = timeDiv.getText();
+                    } catch (NoSuchElementException ex) {
+                        LOGGER.trace("Element time div not found...", ex);
+                    }
+                    WebElement title = listItem.findElement(By.xpath(".//span[@dir='auto']"));
+                    //Check if it is a message or a contact
+                    try {
+                        title.findElement(By.xpath("./ancestor::div[contains(@data-testid,'chatlist-message')]"));
+                        bean = new ChatListBean(ChatListBean.Type.MESSAGE);
+                    } catch (NoSuchElementException ex) {
+                        LOGGER.trace("Not a message...", ex);
+                        bean = new ChatListBean(ChatListBean.Type.CONTACT);
+                    }
+                    String lastMessageStatus = null;
+                    try {
+                        WebElement lastMessageStatusWebElement = listItem.findElement(By.xpath(".//span[@data-testid='last-msg-status']"));
+                        lastMessageStatus = lastMessageStatusWebElement.getText().replaceAll("\n", "");
+                    } catch (NoSuchElementException ex) {
+                        LOGGER.trace("Element span last msg status not found...", ex);
+                    }
+                    int unreadMessages = 0;
+                    try {
+                        WebElement unreadCountSpan = listItem.findElement(By.xpath(".//span[@data-testid='icon-unread-count']"));
+                        unreadMessages = Integer.parseInt(unreadCountSpan.getText());
+                    } catch (NoSuchElementException ex) {
+                        LOGGER.trace("Element span unread count not found...", ex);
+                    } catch (NumberFormatException ex) {
+                        LOGGER.trace("The text value of span element was not an integer...", ex);
+                    }
+
+                    bean.setTitle(title.getText());
+                    bean.setTime(time);
+                    bean.setLastMessage(lastMessageStatus);
+                    bean.setUnreadMessages(unreadMessages);
+                }
+                bean.setListItemTestId(listItem.getAttribute("data-testid"));
+                try {
+                    bean.setSort(Integer.parseInt(sort));
+                } catch (NumberFormatException ex) {
+                    LOGGER.trace("Sort value invalid...", ex);
+                }
+                list.add(bean);
+            } catch (Exception ex) {
+                LOGGER.error("Couldn't parse List-Item to Object...", ex);
+            }
+        }
+//        if (listItems.size() < list.size()) {
+//            list.subList(listItems.size() - 1, list.size() - 1).clear();
+//        }
+
+        Collections.sort(list);
+        return list;
+
     }
 
 }

@@ -79,15 +79,19 @@ public class WhatsAppClient {
         driver.navigate().refresh();
     }
 
-    public synchronized boolean waitTilTextIsAvailable(int seconds) {
+    public synchronized boolean waitTilTextIsAvailable(Duration duration) {
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(seconds))
+            new WebDriverWait(driver, duration)
                     .until(ExpectedConditions.elementToBeClickable(By.xpath("//div[@role='textbox'][@data-testid='conversation-compose-box-input']")));
             return true;
         } catch (Exception ex) {
             LOGGER.trace("Couldn't find Textbox.", ex);
         }
         return false;
+    }
+
+    public synchronized boolean waitTilTextIsAvailable(long seconds) {
+        return waitTilTextIsAvailable(Duration.ofSeconds(seconds));
     }
 
     public synchronized void appendText(String text) {
@@ -108,6 +112,24 @@ public class WhatsAppClient {
         } catch (NoSuchElementException ex) {
             LOGGER.trace("No element found for the text. Be sure you opened a chat window and you are authenticated.");
         }
+    }
+
+    public synchronized boolean search(String text) {
+        return search(text, Duration.ZERO);
+    }
+
+    public synchronized boolean search(String text, Duration timeOut) {
+        try {
+            WebElement textField = new WebDriverWait(driver, timeOut)
+                    .until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[@role='textbox'][@data-testid='chat-list-search']")));
+            textField.sendKeys(Keys.CONTROL + "a");
+            textField.sendKeys(Keys.DELETE);
+            textField.sendKeys(text);
+            return true;
+        } catch (Exception ex) {
+            LOGGER.trace("No element found for the text. Be sure you opened a chat window and you are authenticated.");
+        }
+        return false;
     }
 
     public synchronized void clearTextBox() {
@@ -153,6 +175,17 @@ public class WhatsAppClient {
             return true;
         } catch (Exception ex) {
             LOGGER.trace("Couldn't send message", ex);
+        }
+        return false;
+    }
+
+    public synchronized boolean clickElement(By by) {
+        try {
+            WebElement element = driver.findElement(by);
+            element.click();
+            return true;
+        } catch (NoSuchElementException ex) {
+            LOGGER.trace("Couldn't find element...", ex);
         }
         return false;
     }
@@ -228,33 +261,37 @@ public class WhatsAppClient {
     }
 
     public synchronized WebElement getStartUpProgressBar(long timeOutInMillis) throws NoSuchElementException, TimeoutException {
-        WebElement progress = new WebDriverWait(driver,Duration.ofMillis(timeOutInMillis)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//progress[not(@dir='ltr')]")));
+        WebElement progress = new WebDriverWait(driver, Duration.ofMillis(timeOutInMillis)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//progress[not(@dir='ltr')]")));
         return progress;
     }
 
     public synchronized void waitForTimeOut(long seconds) {
+        waitForTimeOut(Duration.ofSeconds(seconds));
+    }
+
+    public synchronized void waitForTimeOut(Duration duration) {
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(seconds)).until(d -> {
+            new WebDriverWait(driver, duration).until(d -> {
                 return false;
             });
         } catch (TimeoutException ex) {
             LOGGER.trace("Expected Timeout", ex);
         }
     }
-    
+
     public synchronized void waitForPageLoaded(Duration duration) throws TimeoutException {
-        new WebDriverWait(driver,duration).until(d -> ((JavascriptExecutor)d).executeScript("return document.readyState").equals("complete"));
+        new WebDriverWait(driver, duration).until(d -> ((JavascriptExecutor) d).executeScript("return document.readyState").equals("complete"));
     }
 
     public synchronized String getUrl() {
         return driver.getCurrentUrl();
     }
 
-    public WebDriver getDriver() {
+    public synchronized WebDriver getDriver() {
         return driver;
     }
 
-    public boolean isAlertPresent() {
+    public synchronized boolean isAlertPresent() {
         boolean foundAlert = false;
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofNanos(0));
         try {
@@ -266,7 +303,17 @@ public class WhatsAppClient {
         return foundAlert;
     }
 
-    public void acceptAlert() {
+    public synchronized WebElement isPopUpPresent(Duration duration) {
+        WebDriverWait wait = new WebDriverWait(driver, duration);
+        try {
+            return wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[@data-testid='confirm-popup']")));
+        } catch (TimeoutException eTO) {
+            LOGGER.trace("No popup found...", eTO);
+        }
+        return null;
+    }
+
+    public synchronized void acceptAlert() {
         if (isAlertPresent()) {
             driver.switchTo().alert().accept();
         }

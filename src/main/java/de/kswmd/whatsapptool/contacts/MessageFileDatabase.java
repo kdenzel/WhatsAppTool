@@ -84,8 +84,7 @@ public final class MessageFileDatabase implements MessageDatabase {
         try {
             FileUtils.copyURLToFile(inputUrl, dest);
             return true;
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
         }
         return false;
     }

@@ -46,12 +46,12 @@ import org.xml.sax.SAXException;
 public class FileMessageDatabaseTest {
 
     private static final Logger LOGGER;
-    
+
     static {
         System.setProperty("logFilePath", PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         LOGGER = LogManager.getLogger();
     }
-    
+
     private static MessageFileDatabase fileMessageDatabase;
 
     public FileMessageDatabaseTest() {
@@ -59,17 +59,20 @@ public class FileMessageDatabaseTest {
 
     @BeforeAll
     public static void setUpClass() {
-        
+
         try {
             fileMessageDatabase = MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile());
-        } catch (SAXException ex) {
-            LOGGER.error("",ex);
+        }
+        catch (SAXException ex) {
+            LOGGER.error("", ex);
             assertTrue(false);
-        } catch (IOException ex) {
-            LOGGER.error("",ex);
+        }
+        catch (IOException ex) {
+            LOGGER.error("", ex);
             assertTrue(false);
-        } catch (ParserConfigurationException ex) {
-            LOGGER.error("",ex);
+        }
+        catch (ParserConfigurationException ex) {
+            LOGGER.error("", ex);
             assertTrue(false);
         }
     }
@@ -96,14 +99,16 @@ public class FileMessageDatabaseTest {
         boolean expResult = true;
         try {
             fileMessageDatabase.validateXMLSchema(xmlPath);
-        } catch (SAXException ex) {
+        }
+        catch (SAXException ex) {
             assertTrue(false);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             assertTrue(false);
         }
         assertTrue(true);
     }
-    
+
     @Test
     public void getEntities() {
         List<Entity> entities = fileMessageDatabase.getEntities();

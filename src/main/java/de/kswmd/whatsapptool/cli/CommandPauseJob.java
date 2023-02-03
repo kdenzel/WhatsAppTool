@@ -30,7 +30,7 @@ import java.util.Optional;
  *
  * @author Kai Denzel
  */
-public class CommandPauseJob extends Command{
+public class CommandPauseJob extends Command {
 
     public CommandPauseJob() {
         super(COMMAND_PAUSE_JOB, "Pauses the quartz job for automatically sending Messages.");
@@ -41,5 +41,5 @@ public class CommandPauseJob extends Command{
         ScheduleManager.getInstance().pauseAllJobs();
         return Optional.empty();
     }
-    
+
 }

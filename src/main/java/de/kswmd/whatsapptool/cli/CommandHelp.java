@@ -46,7 +46,7 @@ public class CommandHelp extends Command {
             sb.append(String.format("%-30s", c.getCommand()));
             sb.append(String.format("%s", c.getDescription()));
             sb.append("\n");
-            
+
         }
         Console.writeLine(sb.toString().trim());
         return Optional.empty();

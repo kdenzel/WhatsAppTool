@@ -32,7 +32,7 @@ import java.util.Objects;
  * @author Kai Denzel
  */
 public class Entity {
-    
+
     private String identifier;
     private List<Message> messages;
 
@@ -58,14 +58,13 @@ public class Entity {
     public void setMessages(List<Message> messages) {
         this.messages = messages;
     }
-    
-    public void addMessage(Message message){
-        if(messages == null){
+
+    public void addMessage(Message message) {
+        if (messages == null) {
             messages = new ArrayList<>();
         }
         messages.add(message);
     }
-
 
     @Override
     public int hashCode() {
@@ -87,5 +86,10 @@ public class Entity {
         }
         final Entity other = (Entity) obj;
         return Objects.equals(this.identifier, other.identifier);
+    }
+
+    @Override
+    public String toString() {
+        return identifier;
     }
 }

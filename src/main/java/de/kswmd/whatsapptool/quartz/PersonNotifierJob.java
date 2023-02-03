@@ -31,11 +31,11 @@ import org.quartz.JobExecutionException;
  *
  * @author Kai Denzel
  */
-public class PersonNotifierJob implements Job{
+public class PersonNotifierJob implements Job {
 
     @Override
     public void execute(JobExecutionContext jec) throws JobExecutionException {
-        
+
     }
-    
+
 }

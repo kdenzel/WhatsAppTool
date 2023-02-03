@@ -77,4 +77,16 @@ public final class Message {
         return entity;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb
+                .append(entity)
+                .append(":\n")
+                .append(cronExpression)
+                .append("\n\"")
+                .append(content)
+                .append("\"");
+        return sb.toString();
+    }
 }

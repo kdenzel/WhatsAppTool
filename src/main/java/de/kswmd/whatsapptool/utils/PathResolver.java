@@ -52,7 +52,8 @@ public class PathResolver {
             String path = url.replaceAll("^jar:(file:.*)!/.*", "$1");
             try {
                 return Paths.get(new URI(path)).getParent();
-            } catch (URISyntaxException ex) {
+            }
+            catch (URISyntaxException ex) {
                 Console.writeLine("invalid path=" + path);
             }
         }

@@ -30,10 +30,10 @@ import java.util.Optional;
  *
  * @author Kai Denzel
  */
-public class CommandShowText extends Command{
+public class CommandShowText extends Command {
 
     private final WhatsAppClient client;
-    
+
     public CommandShowText(WhatsAppClient client) {
         super(COMMAND_SHOW_TEXT, "Shows the text of the textbox.");
         this.client = client;
@@ -44,5 +44,5 @@ public class CommandShowText extends Command{
         client.printTextContent();
         return Optional.empty();
     }
-    
+
 }

@@ -32,12 +32,12 @@ import org.apache.logging.log4j.Logger;
  *
  * @author Kai Denzel
  */
-public class CommandShowInfoHeader extends Command{
+public class CommandShowInfoHeader extends Command {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    
+
     private final WhatsAppClient client;
-    
+
     public CommandShowInfoHeader(WhatsAppClient client) {
         super(COMMAND_SHOW_INFO_HEADER, "Shows the info header if available.");
         this.client = client;
@@ -48,5 +48,5 @@ public class CommandShowInfoHeader extends Command{
         LOGGER.info(client.getConversationInfoHeader());
         return Optional.empty();
     }
-    
+
 }

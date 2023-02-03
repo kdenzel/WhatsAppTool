@@ -23,7 +23,6 @@
  */
 package de.kswmd.whatsapptool.utils;
 
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -64,7 +63,7 @@ public class EnvironmentTest {
         String afid = Environment.getInstance().getProperty("artifactId");
         Assertions.assertNotNull(afid);
         Assertions.assertNotEquals(afid, "${artifactId}");
-        for(Object o : Environment.getInstance().getProperties().values()){
+        for (Object o : Environment.getInstance().getProperties().values()) {
             Assertions.assertNotNull(o);
             String value = (String) o;
             Assertions.assertFalse(value.matches("^[$]\\{.*\\}$"));

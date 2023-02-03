@@ -30,10 +30,10 @@ import java.util.Optional;
  *
  * @author Kai Denzel
  */
-public class CommandRefresh extends Command{
+public class CommandRefresh extends Command {
 
     private final WhatsAppClient client;
-    
+
     public CommandRefresh(WhatsAppClient client) {
         super(COMMAND_REFRESH, "Reloads the currently open site.");
         this.client = client;
@@ -44,5 +44,5 @@ public class CommandRefresh extends Command{
         client.refresh();
         return Optional.empty();
     }
-    
+
 }

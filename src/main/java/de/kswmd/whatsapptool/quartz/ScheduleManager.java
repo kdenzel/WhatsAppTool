@@ -114,10 +114,11 @@ public class ScheduleManager {
         LOGGER.info("Next maintenance time = " + SimpleDateFormat.getDateTimeInstance().format(trigger.getNextFireTime()));
     }
 
-    public void scheduleMessagesJob(List<Entity> entities) {
+    public void scheduleMessagesJob(List<Entity> entities, final WhatsAppClient client) {
         JobDetail handleCronMessagesJob = newJob(HandleCronMessageJob.class)
                 .withIdentity("messagesJob", "contactPersons")
                 .build();
+        handleCronMessagesJob.getJobDataMap().put(HandleCronMessageJob.KEY_WHATSAPP_CLIENT, client);
         try {
             Set<Trigger> triggers = new HashSet<>();
             for (Entity e : entities) {
@@ -157,7 +158,7 @@ public class ScheduleManager {
             scheduler.pauseJob(JobKey.jobKey("messagesJob", "contactPersons"));
         }
         catch (SchedulerException ex) {
-            LOGGER.error("Couldn't unschedule Job", ex);
+            LOGGER.error("Couldn't pause Jobs", ex);
         }
     }
 
@@ -167,7 +168,7 @@ public class ScheduleManager {
             scheduler.resumeJob(JobKey.jobKey("messagesJob", "contactPersons"));
         }
         catch (SchedulerException ex) {
-            LOGGER.error("Couldn't unschedule Job", ex);
+            LOGGER.error("Couldn't resume Jobs", ex);
         }
     }
 }

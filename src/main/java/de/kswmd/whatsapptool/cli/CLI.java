@@ -91,7 +91,8 @@ public class CLI {
         commands.add(new CommandUpdate(client));
         commands.add(new CommandClear());
         commands.add(new CommandRefresh(client));
-        commands.add(new CommandReloadNotifications(MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile())));
+        commands.add(new CommandReloadNotifications(MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile()), client));
+        commands.add(new CommandSearchContacts(client));
         Console.getInstance().initLineReader(
                 commands
                         .stream()
@@ -143,14 +144,12 @@ public class CLI {
             Console.writeLine();
             progressBar.finish();
             running = true;
-        }
-        catch (WebDriverException ex) {
+        } catch (WebDriverException ex) {
             if (progressBar != null && !progressBar.isFinished()) {
                 progressBar.finish();
             }
             LOGGER.debug("Error", ex);
-        }
-        catch (NumberFormatException ex) {
+        } catch (NumberFormatException ex) {
             LOGGER.debug("This is unexpected...", ex);
         }
         if (!running) {
@@ -163,8 +162,7 @@ public class CLI {
             String line;
             try {
                 line = Console.readLine();
-            }
-            catch (UserInterruptException ex) {
+            } catch (UserInterruptException ex) {
                 LOGGER.trace("User pressed CTRL+C", ex);
                 line = Command.COMMAND_EXIT;
             }

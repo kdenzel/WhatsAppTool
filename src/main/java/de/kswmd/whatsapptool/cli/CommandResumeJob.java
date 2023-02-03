@@ -30,7 +30,7 @@ import java.util.Optional;
  *
  * @author Kai Denzel
  */
-public class CommandResumeJob extends Command{
+public class CommandResumeJob extends Command {
 
     public CommandResumeJob() {
         super(COMMAND_RESUME_JOB, "Resumes the quartz job for automatically sending Messages.");
@@ -41,5 +41,5 @@ public class CommandResumeJob extends Command{
         ScheduleManager.getInstance().resumeAllJobs();
         return Optional.empty();
     }
-    
+
 }

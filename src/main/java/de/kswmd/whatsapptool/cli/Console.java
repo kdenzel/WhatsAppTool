@@ -99,7 +99,8 @@ public final class Console extends AbstractAppender {
             terminal = TerminalBuilder.builder()
                     .system(true)
                     .build();
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             LOGGER.error("Couldn't create terminal or line reader...", ex);
         }
     }
@@ -300,11 +301,13 @@ public final class Console extends AbstractAppender {
         try {
             final byte[] bytes = getLayout().toByteArray(event);
             getInstance().setCursorDownAndWrite(new String(bytes));
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             if (!ignoreExceptions()) {
                 throw new AppenderLoggingException(ex);
             }
-        } finally {
+        }
+        finally {
             readLock.unlock();
         }
     }

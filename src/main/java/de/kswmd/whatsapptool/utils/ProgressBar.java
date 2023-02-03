@@ -74,8 +74,8 @@ public class ProgressBar implements Runnable {
         printTimeBaseProgressBar();
         finished = true;
     }
-    
-    public void start(){
+
+    public void start() {
         start(Console.LINE_BREAK);
     }
 
@@ -97,7 +97,8 @@ public class ProgressBar implements Runnable {
         finished = true;
         try {
             t.join();
-        } catch (InterruptedException ex) {
+        }
+        catch (InterruptedException ex) {
         }
         Console.writeLine();
     }
@@ -117,7 +118,8 @@ public class ProgressBar implements Runnable {
                 long millisToSleep = printTimeBasedProgress(unit, duration, startTimeInMillis, currentTimeInMillis);
                 Thread.sleep(millisToSleep);
                 currentTimeInMillis = System.currentTimeMillis();
-            } catch (InterruptedException ex) {
+            }
+            catch (InterruptedException ex) {
             }
         }
         printTimeBasedProgress(unit, duration, startTimeInMillis, endTimeInMillis);
@@ -205,19 +207,20 @@ public class ProgressBar implements Runnable {
             long ct = System.currentTimeMillis();
             try {
                 String rl = Console.readLine();
-                
-                if(ct > lt + 5000){
+
+                if (ct > lt + 5000) {
                     Console.getInstance().setCursorDownAndWrite("SOSO");
                     lt = ct;
                 }
-                
-                if(rl.equals("exit")){
+
+                if (rl.equals("exit")) {
                     throw new UserInterruptException("");
-                } else if(rl.equals("stop")){
+                } else if (rl.equals("stop")) {
                     p1.finish();
                     p2.finish();
                 }
-            } catch (UserInterruptException ex) {
+            }
+            catch (UserInterruptException ex) {
                 p1.finish();
                 p2.finish();
                 break;

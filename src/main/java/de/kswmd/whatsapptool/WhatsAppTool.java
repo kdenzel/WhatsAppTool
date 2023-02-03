@@ -45,9 +45,10 @@ import org.openqa.selenium.chrome.ChromeDriver;
 public class WhatsAppTool {
 
     private static final Logger LOGGER;
+    public static final String KEY_LOGFILE_PATH = "logFilePath";
 
     static {
-        System.setProperty("logFilePath", PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
+        System.setProperty(KEY_LOGFILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         LOGGER = LogManager.getLogger();
     }
 
@@ -93,8 +94,8 @@ public class WhatsAppTool {
 
     public void initialize(boolean withGui, Browser browser) {
 
-        ScheduleManager scheduleManager = ScheduleManager.getInstance();
-        WebDriverFactory webDriverFactory = new WebDriverFactory(withGui);
+        final ScheduleManager scheduleManager = ScheduleManager.getInstance();
+        final WebDriverFactory webDriverFactory = new WebDriverFactory(withGui, browser);
         WebDriver driver = webDriverFactory.createWebDriver(browser);
         try {
             scheduleManager.start();

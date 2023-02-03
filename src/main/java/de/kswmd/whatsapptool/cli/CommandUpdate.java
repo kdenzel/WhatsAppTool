@@ -30,10 +30,10 @@ import java.util.Optional;
  *
  * @author Kai Denzel
  */
-public class CommandUpdate extends Command{
+public class CommandUpdate extends Command {
 
     private final WhatsAppClient client;
-    
+
     public CommandUpdate(WhatsAppClient client) {
         super(COMMAND_UPDATE, "Updates the client, if an update is available.");
         this.client = client;
@@ -45,5 +45,5 @@ public class CommandUpdate extends Command{
         Console.writeLine(updated ? "The client was successfully updated." : "Nothing was done. The client is up to date.");
         return Optional.of(updated);
     }
-    
+
 }

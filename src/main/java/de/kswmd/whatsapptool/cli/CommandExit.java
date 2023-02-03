@@ -32,7 +32,7 @@ import java.util.Optional;
 public class CommandExit extends Command {
 
     private final CLI cli;
-    
+
     public CommandExit(CLI cli) {
         super(COMMAND_EXIT, "Finish this application.");
         this.cli = cli;

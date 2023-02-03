@@ -32,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Kai Denzel
  */
 public class CommandOpen extends Command {
-    
+
     private final WhatsAppClient client;
 
     public CommandOpen(WhatsAppClient client) {

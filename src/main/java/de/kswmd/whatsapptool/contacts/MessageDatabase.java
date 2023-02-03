@@ -30,9 +30,9 @@ import java.util.List;
  * @author Kai Denzel
  */
 public interface MessageDatabase {
-    
+
     public void loadEntities() throws Exception;
-    
+
     public List<Entity> getEntities();
-    
+
 }

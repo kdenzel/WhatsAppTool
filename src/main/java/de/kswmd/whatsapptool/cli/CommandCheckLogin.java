@@ -50,7 +50,7 @@ public class CommandCheckLogin extends Command {
     public Optional<Object> execute(Object parameters) {
         try {
             Integer timeoutInSeconds = Integer.valueOf(parameters.toString());
-            if(timeoutInSeconds < 0 || timeoutInSeconds > limitInSeconds) {
+            if (timeoutInSeconds < 0 || timeoutInSeconds > limitInSeconds) {
                 throw new Exception("Timeout in Seconds is negative or bigger than " + limitInSeconds);
             }
             LOGGER.info("Check for QRCode with timeout of " + timeoutInSeconds + " seconds.");
@@ -63,9 +63,10 @@ public class CommandCheckLogin extends Command {
                 Console.writeLine("QR-Code isn't visible. Try to open a chat window and send a message.");
             }
             return Optional.of(!qrCodeVisible);
-        } catch(Exception ex) {
+        }
+        catch (Exception ex) {
             Console.writeLine("Invalid Timeout Value. It must be an integer value >= 0 and <= " + limitInSeconds);
-            LOGGER.trace("Error",ex);
+            LOGGER.trace("Error", ex);
         }
         return Optional.empty();
     }

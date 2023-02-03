@@ -29,7 +29,7 @@ import java.util.Optional;
  *
  * @author Kai Denzel
  */
-public class CommandClear extends Command{
+public class CommandClear extends Command {
 
     public CommandClear() {
         super(COMMAND_CLEAR, "Clears the screen. Alternatively you can use CTRL + L.");
@@ -40,5 +40,5 @@ public class CommandClear extends Command{
         Console.getInstance().clear();
         return Optional.empty();
     }
-    
+
 }

@@ -58,9 +58,10 @@ public final class Settings {
         configFilePathWithName = configFilePath + "/" + configFileName;
         try (InputStream input = new FileInputStream(configFilePathWithName)) {
             properties.load(input);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             LOGGER.warn("Could not load settings, use default values instead...");
-            LOGGER.trace("Error loading settings",ex);
+            LOGGER.trace("Error loading settings", ex);
         }
         writeDefaultValues();
         save();
@@ -78,7 +79,7 @@ public final class Settings {
         writeDefaultValueIfNotPresent(KEY_PROFILE_PATH_CHROME, PathResolver.getDefaultChromeBrowserProfileDir().toString());
         writeDefaultValueIfNotPresent(KEY_PROFILE_PATH_FIREFOX, PathResolver.getDefaultFirefoxBrowserProfileDir().toString());
         writeDefaultValueIfNotPresent(KEY_ADMIN_PHONE, "+49...");
-        writeDefaultValueIfNotPresent(KEY_NOTIFICATION_FILE, PathResolver.getConfigDir()+"/notifications.xml");
+        writeDefaultValueIfNotPresent(KEY_NOTIFICATION_FILE, PathResolver.getConfigDir() + "/notifications.xml");
     }
 
     private void writeDefaultValueIfNotPresent(String key, String value) {
@@ -98,7 +99,7 @@ public final class Settings {
     public synchronized String getProfilePathFirefox() {
         return properties.getProperty(KEY_PROFILE_PATH_CHROME);
     }
-    
+
     public synchronized String getNotificationsXMLFile() {
         return properties.getProperty(KEY_NOTIFICATION_FILE);
     }
@@ -115,12 +116,14 @@ public final class Settings {
         new File(configFilePath).mkdirs();
         try {
             new File(configFilePathWithName).createNewFile();
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             LOGGER.error("Failed to create settings...", ex);
         }
         try (OutputStream output = new FileOutputStream(configFilePathWithName)) {
             properties.store(output, null);
-        } catch (IOException io) {
+        }
+        catch (IOException io) {
             LOGGER.error("Failed to write settings...", io);
         }
     }
