@@ -23,6 +23,7 @@
  */
 package de.kswmd.whatsapptool.quartz;
 
+import de.kswmd.whatsapptool.MiscConstants;
 import de.kswmd.whatsapptool.WhatsAppClient;
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
 import de.kswmd.whatsapptool.utils.Settings;
@@ -75,8 +76,7 @@ public class MaintenanceJob implements Job {
                 String hostname = "unknown";
                 try {
                     hostname = InetAddress.getLocalHost().getHostName();
-                }
-                catch (UnknownHostException ex) {
+                } catch (UnknownHostException ex) {
                     LOGGER.trace("Hostname not found...", ex);
                 }
                 sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER))
@@ -87,8 +87,8 @@ public class MaintenanceJob implements Job {
                         .append(Emoji.GRINNING_FACE.getSequence());
                 try {
                     LocalDateTime yesterday = now.minusDays(1);
-                    String logFilePath = System.getProperty("logFilePath");
-                    String fileToRead = yesterday.format(DATE_FORMAT_YYYY_MM) + "/" + yesterday.format(DATE_FORMAT_MM_dd_YYYY) + ".message-job-error-log.txt";
+                    String logFilePath = System.getProperty(MiscConstants.KEY_LOG_FILE_PATH);
+                    String fileToRead = yesterday.format(DATE_FORMAT_YYYY_MM) + "/app-" + yesterday.format(DATE_FORMAT_MM_dd_YYYY) + ".message-job-error-log.txt";
                     String content = Files.readString(Paths.get(logFilePath + "/" + fileToRead));
                     content = content.replaceAll("\n", Keys.chord(Keys.SHIFT, Keys.ENTER));
                     sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
@@ -98,15 +98,13 @@ public class MaintenanceJob implements Job {
                     } else {
                         sb.append("No errors logged.");
                     }
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     LOGGER.error("Couldn't read message-job-error-log.txt...", ex);
                 }
                 client.setText(sb.toString());
                 client.send(3);
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             LOGGER.error("Fire Maintenance job failed...", ex);
         }
     }

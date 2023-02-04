@@ -21,43 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.kswmd.whatsapptool.utils;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+package de.kswmd.whatsapptool;
 
 /**
  *
  * @author Kai Denzel
  */
-public final class Environment {
+public class MiscConstants {
 
-    private Properties properties = new Properties();
-
-    private static Environment instance;
-
-    public static synchronized Environment getInstance() {
-        if (instance == null) {
-            instance = new Environment();
-        }
-        return instance;
-    }
-
-    private Environment() {
-        try {
-            InputStream is = getClass().getResourceAsStream("/environment.properties");
-            properties.load(is);
-        } catch (IOException ex) {
-        }
-    }
-
-    public synchronized String getProperty(String key) {
-        return properties.getProperty(key);
-    }
-
-    public synchronized Properties getProperties() {
-        return properties;
-    }
+    public static final String KEY_LOG_FILE_PATH = "logFilePath";
 
 }

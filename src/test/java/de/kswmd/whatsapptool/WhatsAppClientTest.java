@@ -24,72 +24,79 @@
 package de.kswmd.whatsapptool;
 
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
+import de.kswmd.whatsapptool.contacts.ChatListBean;
+import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
+import de.kswmd.whatsapptool.contacts.Entity;
+import de.kswmd.whatsapptool.contacts.MessageFileDatabase;
+import de.kswmd.whatsapptool.quartz.ScheduleManager;
+import de.kswmd.whatsapptool.selenium.WebDriverFactory;
+import static de.kswmd.whatsapptool.selenium.WebDriverFactory.Browser.CHROME;
 import de.kswmd.whatsapptool.utils.PathResolver;
 import de.kswmd.whatsapptool.utils.Settings;
-import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.WebElement;
+import org.quartz.SimpleScheduleBuilder;
+import org.xml.sax.SAXException;
 
 /**
  *
  * @author Kai Denzel
  */
 public class WhatsAppClientTest {
-
+    
     private static Logger LOGGER;
-
+    
+    private static ScheduleManager scheduleManager;
+    private static WebDriverFactory webDriverFactory;
+    
     private static WebDriver driver;
     private static WhatsAppClient client;
-
+    
     static {
-        System.setProperty("logFilePath", PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
+        System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         LOGGER = LogManager.getLogger();
     }
-
+    
     public WhatsAppClientTest() {
     }
-
+    
     @BeforeAll
     public static void setUpClass() {
-        Settings settings = Settings.getInstance();
-        String userDataDir = settings.getProfilePathChrome();
-        /**
-         * ChromeOptions options = new ChromeOptions();
-         * options.addArguments("--user-data-dir=" + userDataDir); driver = new
-         * ChromeDriver(options);*
-         */
-        FirefoxProfile profile = new FirefoxProfile(new File(settings.getProfilePathFirefox()));
-        FirefoxOptions capabilities = new FirefoxOptions();
-        capabilities.setProfile(profile);
-        FirefoxOptions options = new FirefoxOptions(capabilities);
-        options.setHeadless(false);
-        driver = new FirefoxDriver(options);
+        scheduleManager = ScheduleManager.getInstance();
+        webDriverFactory = new WebDriverFactory(true, CHROME);
+        driver = webDriverFactory.createWebDriver();
         client = new WhatsAppClient(driver);
     }
-
+    
     @AfterAll
     public static void tearDownClass() {
         driver.quit();
     }
-
+    
     @BeforeEach
     public void setUp() {
-
+        
     }
-
+    
     @AfterEach
     public void tearDown() {
-
+        
     }
 
     //@Test
@@ -97,18 +104,73 @@ public class WhatsAppClientTest {
         String emoji = Emoji.GRINNING_FACE.getSequence();
         LOGGER.info(emoji);
         client.open(Settings.getInstance().getAdminPhoneNumber());
-        if (!client.waitTilTextIsAvailable(1)) {
-
+        if (client.waitTilTextIsAvailable(100)) {
+            
             try {
                 client.setText(emoji);
-                Assertions.assertTrue(true);
-            }
-            catch (Exception ex) {
+                //client.send(3);
+                assertTrue(true);
+            } catch (Exception ex) {
                 LOGGER.error("", ex);
-                Assertions.assertTrue(false);
+                assertTrue(false);
             }
             client.waitForTimeOut(1);
+        } else {
+            assertTrue(false);
         }
     }
 
+    //@Test
+    public void testMaintenanceChronJob() {
+        assertTrue(scheduleManager.start());
+        scheduleManager.scheduleMaintenanceJob(client, SimpleScheduleBuilder.simpleSchedule());
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException ex) {
+            LOGGER.error("Error", ex);
+        }
+        assertTrue(scheduleManager.stop());
+    }
+    
+    //@Test
+    public void testNotificationsXML() {
+        try {
+            client.open();
+            MessageFileDatabase db = MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile());
+            db.loadEntities();
+            List<Entity> entities = db.getEntities();
+            StringBuilder errorMessage = new StringBuilder();
+            for (Entity e : entities) {
+                String id = e.getIdentifier();
+                client.search(id, Duration.ofSeconds(30));
+                client.waitForTimeOut(Duration.ofSeconds(1));
+                Optional<WebElement> chatList = client.getChatList();
+                if (chatList.isPresent()) {
+                    List<ChatListBean> elements = WhatsAppHelper.generateFromWebElement(chatList.get()).stream().filter(cbl -> cbl.getType().equals(CONTACT)).collect(Collectors.toList());
+                    assertTrue(!elements.isEmpty());
+                    ChatListBean clb = elements.get(0);
+                    client.clickElement(By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"));
+                    client.waitForTimeOut(10);
+                }
+            }
+            assertTrue(true);
+            assertEquals(errorMessage.length(), 0);
+        } catch (SAXException ex) {
+            LOGGER.error("Error", ex);
+            assertTrue(false);
+        } catch (IOException ex) {
+            LOGGER.error("Error", ex);
+            assertTrue(false);
+        } catch (ParserConfigurationException ex) {
+            LOGGER.error("Error", ex);
+            assertTrue(false);
+        } catch (XPathExpressionException ex) {
+            LOGGER.error("Error", ex);
+            assertTrue(false);
+        } catch (ParseException ex) {
+            LOGGER.error("Error", ex);
+            assertTrue(false);
+        }
+    }
+    
 }

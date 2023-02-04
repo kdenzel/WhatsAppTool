@@ -23,10 +23,10 @@
  */
 package de.kswmd.whatsapptool.contacts;
 
+import de.kswmd.whatsapptool.MiscConstants;
 import de.kswmd.whatsapptool.utils.PathResolver;
 import de.kswmd.whatsapptool.utils.Settings;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.logging.log4j.LogManager;
@@ -48,7 +48,7 @@ public class FileMessageDatabaseTest {
     private static final Logger LOGGER;
 
     static {
-        System.setProperty("logFilePath", PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
+        System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         LOGGER = LogManager.getLogger();
     }
 
@@ -62,16 +62,13 @@ public class FileMessageDatabaseTest {
 
         try {
             fileMessageDatabase = MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile());
-        }
-        catch (SAXException ex) {
+        } catch (SAXException ex) {
             LOGGER.error("", ex);
             assertTrue(false);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             LOGGER.error("", ex);
             assertTrue(false);
-        }
-        catch (ParserConfigurationException ex) {
+        } catch (ParserConfigurationException ex) {
             LOGGER.error("", ex);
             assertTrue(false);
         }
@@ -99,11 +96,9 @@ public class FileMessageDatabaseTest {
         boolean expResult = true;
         try {
             fileMessageDatabase.validateXMLSchema(xmlPath);
-        }
-        catch (SAXException ex) {
+        } catch (SAXException ex) {
             assertTrue(false);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             assertTrue(false);
         }
         assertTrue(true);

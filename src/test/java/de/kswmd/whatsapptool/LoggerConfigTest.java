@@ -24,21 +24,25 @@
 package de.kswmd.whatsapptool;
 
 import de.kswmd.whatsapptool.utils.PathResolver;
-import de.kswmd.whatsapptool.utils.Settings;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Kai Denzel
  */
-public class SettingsTest {
+public class LoggerConfigTest {
 
-    public SettingsTest() {
-    }
+    private static Logger LOGGER;
 
     @org.junit.jupiter.api.BeforeAll
     public static void setUpClass() throws Exception {
         System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
+        LOGGER = LogManager.getLogger();
     }
 
     @org.junit.jupiter.api.AfterAll
@@ -54,9 +58,10 @@ public class SettingsTest {
     }
 
     @org.junit.jupiter.api.Test
-    public void testSomeMethod() {
-        Settings settings = Settings.getInstance();
-        assertNotNull(settings);
-        assertFalse(settings.isEmpty());
+    public void testLoggerAppenders() {
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        Appender appender = context.getConfiguration().getAppender("HandleCronMessageJob");
+        assertTrue(appender instanceof RollingFileAppender);
+        RollingFileAppender rfa = (RollingFileAppender) appender;
     }
 }

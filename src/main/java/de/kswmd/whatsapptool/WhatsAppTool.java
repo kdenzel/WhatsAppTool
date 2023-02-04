@@ -45,10 +45,9 @@ import org.openqa.selenium.chrome.ChromeDriver;
 public class WhatsAppTool {
 
     private static final Logger LOGGER;
-    public static final String KEY_LOGFILE_PATH = "logFilePath";
 
     static {
-        System.setProperty(KEY_LOGFILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
+        System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         LOGGER = LogManager.getLogger();
     }
 

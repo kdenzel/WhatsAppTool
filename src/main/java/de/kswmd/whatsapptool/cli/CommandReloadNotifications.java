@@ -54,8 +54,7 @@ public class CommandReloadNotifications extends Command {
             manager.scheduleMessagesJob(messageDatabase.getEntities(), client);
             manager.resumeAllJobs();
             Console.writeLine("Successfully scheduled the job.");
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             LOGGER.error("Couldn't create CronJob for notifications.", ex);
         }
         return Optional.empty();

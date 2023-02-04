@@ -49,7 +49,7 @@ import org.quartz.JobExecutionException;
 @DisallowConcurrentExecution
 public class HandleCronMessageJob implements Job {
 
-    public static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final String KEY_MESSAGE = "message";
     public static final String KEY_WHATSAPP_CLIENT = "whatsapp_client";

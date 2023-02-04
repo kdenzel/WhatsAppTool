@@ -8,7 +8,7 @@
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </AdvancedConsole>
         <RollingFile name="RollingFile" fileName="${sys:logFilePath}/log.txt"
-                     filePattern="${sys:logFilePath}/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+                     filePattern="${sys:logFilePath}/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}.log.txt">
             <PatternLayout>
                 <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
             </PatternLayout>

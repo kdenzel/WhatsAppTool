@@ -23,6 +23,7 @@
  */
 package de.kswmd.whatsapptool.utils;
 
+import de.kswmd.whatsapptool.MiscConstants;
 import de.kswmd.whatsapptool.cli.Console;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -97,8 +98,7 @@ public class ProgressBar implements Runnable {
         finished = true;
         try {
             t.join();
-        }
-        catch (InterruptedException ex) {
+        } catch (InterruptedException ex) {
         }
         Console.writeLine();
     }
@@ -118,8 +118,7 @@ public class ProgressBar implements Runnable {
                 long millisToSleep = printTimeBasedProgress(unit, duration, startTimeInMillis, currentTimeInMillis);
                 Thread.sleep(millisToSleep);
                 currentTimeInMillis = System.currentTimeMillis();
-            }
-            catch (InterruptedException ex) {
+            } catch (InterruptedException ex) {
             }
         }
         printTimeBasedProgress(unit, duration, startTimeInMillis, endTimeInMillis);
@@ -194,7 +193,7 @@ public class ProgressBar implements Runnable {
     }
 
     public static void main(String[] args) {
-        System.setProperty("logFilePath", PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
+        System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         Console.getInstance().initLineReader(args);
         ProgressBar p1 = ProgressBar.getTimerBasedProgressBar(800, ChronoUnit.SECONDS);
         p1.start();
@@ -219,8 +218,7 @@ public class ProgressBar implements Runnable {
                     p1.finish();
                     p2.finish();
                 }
-            }
-            catch (UserInterruptException ex) {
+            } catch (UserInterruptException ex) {
                 p1.finish();
                 p2.finish();
                 break;

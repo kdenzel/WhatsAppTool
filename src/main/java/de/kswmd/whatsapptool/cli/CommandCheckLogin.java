@@ -63,8 +63,7 @@ public class CommandCheckLogin extends Command {
                 Console.writeLine("QR-Code isn't visible. Try to open a chat window and send a message.");
             }
             return Optional.of(!qrCodeVisible);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             Console.writeLine("Invalid Timeout Value. It must be an integer value >= 0 and <= " + limitInSeconds);
             LOGGER.trace("Error", ex);
         }
