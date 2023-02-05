@@ -21,35 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.kswmd.whatsapptool.cli;
-
-import de.kswmd.whatsapptool.WhatsAppWebClient;
-import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
+package de.kswmd.whatsapptool;
 
 /**
  *
  * @author Kai Denzel
  */
-public class CommandOpen extends Command {
+public class NoSuchWhatsAppWebElementException extends Exception{
 
-    private final WhatsAppWebClient client;
-
-    public CommandOpen(WhatsAppWebClient client) {
-        super(COMMAND_OPEN, "Opens the chat window with the specified Phonenumber. The Number must start with the country code.");
-        this.client = client;
+    public NoSuchWhatsAppWebElementException(String message, Throwable cause) {
+        super(message, cause);
     }
-
-    @Override
-    public Optional<Object> execute(Object parameters) {
-        String p = (String) parameters;
-        if (!StringUtils.trimToEmpty(p).isEmpty()) {
-            client.open(p);
-        } else {
-            Console.writeLine("Please enter a Phonenumber as Parameter.");
-        }
-        Console.writeLine("Opened URL " + client.getUrl());
-        return Optional.empty();
-    }
-
+    
 }

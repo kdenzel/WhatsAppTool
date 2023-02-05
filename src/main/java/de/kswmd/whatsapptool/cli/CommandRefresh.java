@@ -23,7 +23,7 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.Optional;
 
 /**
@@ -32,9 +32,9 @@ import java.util.Optional;
  */
 public class CommandRefresh extends Command {
 
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
 
-    public CommandRefresh(WhatsAppClient client) {
+    public CommandRefresh(WhatsAppWebClient client) {
         super(COMMAND_REFRESH, "Reloads the currently open site.");
         this.client = client;
     }

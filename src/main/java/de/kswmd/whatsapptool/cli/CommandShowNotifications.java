@@ -23,7 +23,7 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.List;
 import java.util.Optional;
 import org.openqa.selenium.By;
@@ -35,9 +35,9 @@ import org.openqa.selenium.WebElement;
  */
 public class CommandShowNotifications extends Command {
 
-    private WhatsAppClient client;
+    private WhatsAppWebClient client;
 
-    public CommandShowNotifications(WhatsAppClient client) {
+    public CommandShowNotifications(WhatsAppWebClient client) {
         super(COMMAND_SHOW_NOTIFICATIONS, "Shows all contacts with icon unread.");
         this.client = client;
     }

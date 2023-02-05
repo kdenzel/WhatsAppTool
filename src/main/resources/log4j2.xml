@@ -29,7 +29,7 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <Logger name="de.kswmd.whatsapptool.quartz.HandleCronMessageJob" level="error" additivity="false">
+        <Logger name="de.kswmd.whatsapptool.quartz.HandleCronMessageJob" level="info" additivity="false">
             <AppenderRef ref="advancedConsole"/>
             <AppenderRef ref="HandleCronMessageJob"/>
             <AppenderRef ref="RollingFile"/>

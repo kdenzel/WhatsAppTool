@@ -23,8 +23,10 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.Optional;
+import java.util.logging.Level;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,9 +39,9 @@ public class CommandSetText extends Command {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
 
-    public CommandSetText(WhatsAppClient client) {
+    public CommandSetText(WhatsAppWebClient client) {
         super(COMMAND_SET_TEXT, "Sets the text of the textfield.");
         this.client = client;
     }
@@ -48,7 +50,11 @@ public class CommandSetText extends Command {
     public Optional<Object> execute(Object parameters) {
         String p = (String) parameters;
         if (!StringUtils.trimToEmpty(p).isEmpty()) {
-            client.setText(p);
+            try {
+                client.setText(p);
+            } catch (TimeoutWhatsAppWebException ex) {
+                LOGGER.error("Couldn't set Text.",ex);
+            }
         } else {
             LOGGER.info("Please enter a text.");
         }

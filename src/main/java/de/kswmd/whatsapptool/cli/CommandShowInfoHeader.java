@@ -23,8 +23,10 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.Optional;
+import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,16 +38,20 @@ public class CommandShowInfoHeader extends Command {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
 
-    public CommandShowInfoHeader(WhatsAppClient client) {
+    public CommandShowInfoHeader(WhatsAppWebClient client) {
         super(COMMAND_SHOW_INFO_HEADER, "Shows the info header if available.");
         this.client = client;
     }
 
     @Override
     public Optional<Object> execute(Object parameters) {
-        LOGGER.info(client.getConversationInfoHeader());
+        try {
+            LOGGER.info(client.getConversationInfoHeaderText());
+        } catch (TimeoutWhatsAppWebException ex) {
+            java.util.logging.Logger.getLogger(CommandShowInfoHeader.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return Optional.empty();
     }
 

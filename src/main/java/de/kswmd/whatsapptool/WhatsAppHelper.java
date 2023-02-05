@@ -63,13 +63,13 @@ public class WhatsAppHelper {
 
     }
 
-    public static String getAttributesOfElement(WebDriver driver, WebElement element) {
+    public static synchronized String getAttributesOfElement(WebDriver driver, WebElement element) {
         JavascriptExecutor executor = (JavascriptExecutor) driver;
         Object elementAttributes = executor.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", element);
         return elementAttributes.toString();
     }
 
-    public static List<ChatListBean> generateFromWebElement(WebElement chatList) {
+    public static synchronized List<ChatListBean> generateFromWebElement(WebElement chatList) {
         List<WebElement> listItems = chatList.findElements(By.xpath(".//div[contains(@data-testid,'list-item-')]"));
         List<ChatListBean> list = new ArrayList<>(listItems.size());
         for (WebElement listItem : listItems) {
@@ -133,7 +133,7 @@ public class WhatsAppHelper {
                 }
                 list.add(bean);
             } catch (Exception ex) {
-                LOGGER.error("Couldn't parse List-Item to Object...", ex);
+                LOGGER.trace("Couldn't parse List-Item to Object...",ex);
             }
         }
 //        if (listItems.size() < list.size()) {

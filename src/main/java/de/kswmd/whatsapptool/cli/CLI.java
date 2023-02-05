@@ -23,8 +23,10 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.contacts.MessageFileDatabase;
+import de.kswmd.whatsapptool.utils.ChronoConstants;
 import de.kswmd.whatsapptool.utils.ProgressBar;
 import de.kswmd.whatsapptool.utils.Settings;
 import java.io.IOException;
@@ -36,7 +38,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jline.reader.UserInterruptException;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.xml.sax.SAXException;
 
@@ -54,7 +55,7 @@ public class CLI {
     /**
      * WhatsApp-Client to perform operations on WhatsApp-Web via the WebDriver.
      */
-    private final WhatsAppClient whatsAppClient;
+    private final WhatsAppWebClient whatsAppClient;
     /**
      * Flag to set Application running.
      */
@@ -72,7 +73,7 @@ public class CLI {
      * @throws java.io.IOException
      * @throws javax.xml.parsers.ParserConfigurationException
      */
-    public CLI(final WhatsAppClient client) throws SAXException, IOException, ParserConfigurationException {
+    public CLI(final WhatsAppWebClient client) throws SAXException, IOException, ParserConfigurationException {
         this.whatsAppClient = client;
         commands.add(new CommandExit(this));
         commands.add(new CommandHelp(commands));
@@ -91,6 +92,7 @@ public class CLI {
         commands.add(new CommandUpdate(client));
         commands.add(new CommandClear());
         commands.add(new CommandRefresh(client));
+        commands.add(new CommandPrintDOM(client));
         commands.add(new CommandReloadNotifications(MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile()), client));
         commands.add(new CommandSearchContacts(client));
         Console.getInstance().initLineReader(
@@ -107,17 +109,16 @@ public class CLI {
         whatsAppClient.open();
         ProgressBar progressBar = null;
         try {
-            final int timeOutInSecondsForStartUpProgressBar = 5;
             progressBar = ProgressBar.getTimerBasedProgressBar(
-                    timeOutInSecondsForStartUpProgressBar,
+                    ChronoConstants.DURATION_OF_5_SECONDS,
                     ChronoUnit.SECONDS
             );
             LOGGER.info("Wait for Browser to load Website. Timeout = "
-                    + timeOutInSecondsForStartUpProgressBar
+                    + ChronoConstants.DURATION_OF_5_SECONDS.getSeconds()
                     + " seconds.");
             progressBar.start();
             WebElement progress = whatsAppClient.getStartUpProgressBar(
-                    timeOutInSecondsForStartUpProgressBar * 1000
+                    ChronoConstants.DURATION_OF_5_SECONDS
             );
             progressBar.finish();
             LOGGER.info("Website was loaded successfully. WhatsApp Loading Screen is showing.");
@@ -125,13 +126,12 @@ public class CLI {
             int lastValue = -1;
             final int max = Integer.parseInt(progress.getAttribute("max"));
 
-            final int timeOutInSecondsForStartUp = 30;
-            progressBar = ProgressBar.getTimerBasedProgressBar(timeOutInSecondsForStartUp, ChronoUnit.SECONDS);
+            progressBar = ProgressBar.getTimerBasedProgressBar(ChronoConstants.DURATION_OF_30_SECONDS, ChronoUnit.SECONDS);
             progressBar.start(Console.LINE_BREAK + "Time for timeout in seconds" + Console.LINE_BREAK);
             long lineNumber = Console.getInstance().setCursorDownAndWrite(Console.LINE_BREAK + "Progressbar" + Console.LINE_BREAK);
             long startTime = System.currentTimeMillis();
             long currentTime = startTime;
-            long endTime = System.currentTimeMillis() + timeOutInSecondsForStartUp * 1000;
+            long endTime = System.currentTimeMillis() + ChronoConstants.DURATION_OF_30_SECONDS.toMillis();
             while (value < max && currentTime < endTime) {
                 if (lastValue != value) {
                     ProgressBar.printProgress(startTime, max, value, lineNumber);
@@ -143,8 +143,9 @@ public class CLI {
             ProgressBar.printProgress(startTime, max, value, lineNumber);
             Console.writeLine();
             progressBar.finish();
+            LOGGER.info("Website was loaded successfully. You are now able to send messages to your contacts.");
             running = true;
-        } catch (WebDriverException ex) {
+        } catch (TimeoutWhatsAppWebException ex) {
             if (progressBar != null && !progressBar.isFinished()) {
                 progressBar.finish();
             }
@@ -152,8 +153,9 @@ public class CLI {
         } catch (NumberFormatException ex) {
             LOGGER.debug("This is unexpected...", ex);
         }
+        
         if (!running) {
-            int timeoutInSeconds = 5;
+            final long timeoutInSeconds = ChronoConstants.DURATION_OF_5_SECONDS.toSeconds();
             LOGGER.info("Couldn't load Chats and Contacts. Check if QR-Code is visible. Timeout = " + timeoutInSeconds);
             isLoggedIn(timeoutInSeconds);
         }
@@ -176,7 +178,6 @@ public class CLI {
             } else {
                 Console.writeLine("No command found.");
             }
-
         }
     }
 
@@ -194,7 +195,7 @@ public class CLI {
      * @param timeoutInSeconds
      * @return
      */
-    public boolean isLoggedIn(int timeoutInSeconds) {
+    public boolean isLoggedIn(long timeoutInSeconds) {
         Optional<Object> result = getCommand(Command.COMMAND_CHECK_LOGGEDIN).get().execute(timeoutInSeconds);
         return result.isPresent() && (boolean) result.get();
     }

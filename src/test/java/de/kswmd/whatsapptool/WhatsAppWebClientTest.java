@@ -38,6 +38,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
@@ -48,6 +49,7 @@ import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -58,45 +60,45 @@ import org.xml.sax.SAXException;
  *
  * @author Kai Denzel
  */
-public class WhatsAppClientTest {
-    
+public class WhatsAppWebClientTest {
+
     private static Logger LOGGER;
-    
+
     private static ScheduleManager scheduleManager;
     private static WebDriverFactory webDriverFactory;
-    
+
     private static WebDriver driver;
-    private static WhatsAppClient client;
-    
+    private static WhatsAppWebClient client;
+
     static {
         System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         LOGGER = LogManager.getLogger();
     }
-    
-    public WhatsAppClientTest() {
+
+    public WhatsAppWebClientTest() {
     }
-    
+
     @BeforeAll
     public static void setUpClass() {
         scheduleManager = ScheduleManager.getInstance();
         webDriverFactory = new WebDriverFactory(true, CHROME);
         driver = webDriverFactory.createWebDriver();
-        client = new WhatsAppClient(driver);
+        client = new WhatsAppWebClient(driver);
     }
-    
+
     @AfterAll
     public static void tearDownClass() {
         driver.quit();
     }
-    
+
     @BeforeEach
     public void setUp() {
-        
+
     }
-    
+
     @AfterEach
     public void tearDown() {
-        
+
     }
 
     //@Test
@@ -104,20 +106,16 @@ public class WhatsAppClientTest {
         String emoji = Emoji.GRINNING_FACE.getSequence();
         LOGGER.info(emoji);
         client.open(Settings.getInstance().getAdminPhoneNumber());
-        if (client.waitTilTextIsAvailable(100)) {
-            
-            try {
-                client.setText(emoji);
-                //client.send(3);
-                assertTrue(true);
-            } catch (Exception ex) {
-                LOGGER.error("", ex);
-                assertTrue(false);
-            }
-            client.waitForTimeOut(1);
-        } else {
+
+        try {
+            client.setText(emoji, Duration.ofSeconds(10));
+            //client.send(3);
+            assertTrue(true);
+        } catch (Exception ex) {
+            LOGGER.error("", ex);
             assertTrue(false);
         }
+        client.waitForTimeOut(1);
     }
 
     //@Test
@@ -131,7 +129,7 @@ public class WhatsAppClientTest {
         }
         assertTrue(scheduleManager.stop());
     }
-    
+
     //@Test
     public void testNotificationsXML() {
         try {
@@ -142,16 +140,20 @@ public class WhatsAppClientTest {
             StringBuilder errorMessage = new StringBuilder();
             for (Entity e : entities) {
                 String id = e.getIdentifier();
-                client.search(id, Duration.ofSeconds(30));
-                client.waitForTimeOut(Duration.ofSeconds(1));
-                Optional<WebElement> chatList = client.getChatList();
-                if (chatList.isPresent()) {
-                    List<ChatListBean> elements = WhatsAppHelper.generateFromWebElement(chatList.get()).stream().filter(cbl -> cbl.getType().equals(CONTACT)).collect(Collectors.toList());
-                    assertTrue(!elements.isEmpty());
-                    ChatListBean clb = elements.get(0);
-                    client.clickElement(By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"));
-                    client.waitForTimeOut(10);
+                try {
+                    client.search(id, Duration.ofSeconds(30));
+                } catch (TimeoutWhatsAppWebException ex) {
+                    java.util.logging.Logger.getLogger(WhatsAppWebClientTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                client.waitForTimeOut(Duration.ofSeconds(1));
+                WebElement chatList = client.getChatList();
+
+                List<ChatListBean> elements = WhatsAppHelper.generateFromWebElement(chatList).stream().filter(cbl -> cbl.getType().equals(CONTACT)).collect(Collectors.toList());
+                assertTrue(!elements.isEmpty());
+                ChatListBean clb = elements.get(0);
+                client.clickElement(By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"));
+                client.waitForTimeOut(10);
+
             }
             assertTrue(true);
             assertEquals(errorMessage.length(), 0);
@@ -170,7 +172,19 @@ public class WhatsAppClientTest {
         } catch (ParseException ex) {
             LOGGER.error("Error", ex);
             assertTrue(false);
+        } catch (TimeoutWhatsAppWebException ex) {
+            LOGGER.error("Error", ex);
+            assertTrue(false);
         }
     }
-    
+
+    //@Test
+    public void testCustomExceptions() throws NoSuchWhatsAppWebElementException {
+        try {
+            client.appendText("test");
+        } catch (TimeoutWhatsAppWebException ex) {
+            LOGGER.error("", ex);
+        }
+    }
+
 }

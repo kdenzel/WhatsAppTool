@@ -98,7 +98,7 @@ public class WhatsAppTool {
         WebDriver driver = webDriverFactory.createWebDriver(browser);
         try {
             scheduleManager.start();
-            WhatsAppClient client = new WhatsAppClient(driver);
+            WhatsAppWebClient client = new WhatsAppWebClient(driver);
             scheduleManager.scheduleMaintenanceJob(client);
             scheduleManager.pauseAllJobs();
             CLI cli = new CLI(client);

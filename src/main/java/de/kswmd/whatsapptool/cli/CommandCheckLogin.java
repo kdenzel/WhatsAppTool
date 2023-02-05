@@ -23,7 +23,7 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.utils.ProgressBar;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -38,10 +38,10 @@ public class CommandCheckLogin extends Command {
 
     private final Logger LOGGER = LogManager.getLogger();
 
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
     private final int limitInSeconds = 10;
 
-    public CommandCheckLogin(WhatsAppClient client) {
+    public CommandCheckLogin(WhatsAppWebClient client) {
         super(COMMAND_CHECK_LOGGEDIN, "Scans the website for the qr Code. If visible, you have to login again.");
         this.client = client;
     }
@@ -49,7 +49,7 @@ public class CommandCheckLogin extends Command {
     @Override
     public Optional<Object> execute(Object parameters) {
         try {
-            Integer timeoutInSeconds = Integer.valueOf(parameters.toString());
+            Long timeoutInSeconds = Long.valueOf(parameters.toString());
             if (timeoutInSeconds < 0 || timeoutInSeconds > limitInSeconds) {
                 throw new Exception("Timeout in Seconds is negative or bigger than " + limitInSeconds);
             }

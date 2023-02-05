@@ -23,7 +23,8 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.WhatsAppHelper;
 import de.kswmd.whatsapptool.contacts.ChatListBean;
 import java.time.Duration;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -42,24 +44,24 @@ import org.openqa.selenium.WebElement;
  * @author Kai Denzel
  */
 public class CommandSearchContacts extends Command {
-
+    
     private static final Logger LOGGER = LogManager.getLogger();
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
     private final List<ChatListBean.Type> filters;
-
-    public CommandSearchContacts(final WhatsAppClient client) {
+    
+    public CommandSearchContacts(final WhatsAppWebClient client) {
         super(COMMAND_SEARCH_CONTACTS, "Searches all contacts matching with parameter. You can also filter with -f or --filter for " + Arrays.toString(ChatListBean.Type.values()));
         this.client = client;
         this.filters = new ArrayList<>(ChatListBean.Type.values().length);
     }
-
+    
     @Override
     public Optional<Object> execute(Object parameters) {
         String params = String.valueOf(parameters);
         String search = params;
         filters.clear();
         if (params.startsWith("-f") || params.startsWith("--filter")) {
-
+            
             int indexOfFirstSpace = params.indexOf(" ");
             if (indexOfFirstSpace > 0) {
                 int idnexOfSecondSpace = params.indexOf(" ", indexOfFirstSpace + 1);
@@ -77,7 +79,7 @@ public class CommandSearchContacts extends Command {
                 } catch (IllegalArgumentException ex) {
                     LOGGER.debug("Wrong value for filter", ex);
                 }
-
+                
             }
             if (filters.isEmpty()) {
                 search = null;
@@ -85,11 +87,10 @@ public class CommandSearchContacts extends Command {
             }
         }
         if (!StringUtils.trimToEmpty(search).isEmpty()) {
-            client.search(search);
-            client.waitForTimeOut(Duration.ofMillis(500));
-            Optional<WebElement> optonalChatList = client.getChatList();
-            if (optonalChatList.isPresent()) {
-                WebElement chatList = optonalChatList.get();
+            try {
+                client.search(search);
+                client.waitForTimeOut(Duration.ofMillis(500));
+                WebElement chatList = client.getChatList();
                 List<ChatListBean> list = WhatsAppHelper.generateFromWebElement(chatList);
                 if (!filters.isEmpty()) {
                     list = list.stream().filter(cb -> filters.contains(cb.getType())).collect(Collectors.toList());
@@ -101,13 +102,15 @@ public class CommandSearchContacts extends Command {
                 });
                 Console.writeLine(sb.toString().trim());
                 return Optional.of(list);
-            } else {
-                Console.writeLine("No results found.");
+            } catch (TimeoutWhatsAppWebException ex) {
+                LOGGER.debug("Something went wrong in searching...", ex);
+                Console.writeLine(ex.getMessage());
             }
+            
         } else {
             Console.writeLine("No search term found.");
         }
         return Optional.empty();
     }
-
+    
 }

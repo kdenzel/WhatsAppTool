@@ -23,18 +23,16 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.WhatsAppHelper;
 import de.kswmd.whatsapptool.contacts.ChatListBean;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
 /**
@@ -45,19 +43,18 @@ public class CommandPrintChatList extends Command {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
 
-    public CommandPrintChatList(WhatsAppClient client) {
+    public CommandPrintChatList(WhatsAppWebClient client) {
         super(COMMAND_PRINT_CHATLIST, "Prints the current chatlist to the console.");
         this.client = client;
     }
 
     @Override
     public Optional<Object> execute(Object parameters) {
-        Optional<WebElement> optionalChatList = client.getChatList();
-        client.waitForTimeOut(Duration.ofMillis(500));
-        if (optionalChatList.isPresent()) {
-            WebElement chatList = optionalChatList.get();
+        try {
+            WebElement chatList = client.getChatList();
+            client.waitForTimeOut(Duration.ofMillis(500));
             List<ChatListBean> list = WhatsAppHelper.generateFromWebElement(chatList);
             StringBuilder sb = new StringBuilder();
             list.forEach(c -> {
@@ -66,6 +63,9 @@ public class CommandPrintChatList extends Command {
             });
             Console.writeLine(sb.toString().trim());
             return Optional.of(list);
+        } catch (TimeoutWhatsAppWebException ex) {
+            LOGGER.trace("No chatlist found...", ex);
+            Console.writeLine("Chatlist not available.");
         }
         return Optional.empty();
     }

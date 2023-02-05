@@ -23,7 +23,7 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.Optional;
 
 /**
@@ -32,9 +32,9 @@ import java.util.Optional;
  */
 public class CommandClickNotification extends Command {
 
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
 
-    public CommandClickNotification(WhatsAppClient client) {
+    public CommandClickNotification(WhatsAppWebClient client) {
         super(COMMAND_CLICK_NOTIFICATION, "Opens the first Contact with icon unread.");
         this.client = client;
     }

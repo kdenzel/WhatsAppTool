@@ -23,12 +23,17 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.NoSuchWhatsAppWebElementException;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
+import de.kswmd.whatsapptool.utils.ChronoConstants;
 import de.kswmd.whatsapptool.utils.ProgressBar;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Keys;
 
 /**
@@ -37,10 +42,12 @@ import org.openqa.selenium.Keys;
  */
 public class CommandSend extends Command {
 
-    private final WhatsAppClient client;
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    private final WhatsAppWebClient client;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss");
 
-    public CommandSend(WhatsAppClient client) {
+    public CommandSend(WhatsAppWebClient client) {
         super(COMMAND_SEND, "Sends the message that is displayed in the Textfield.");
         this.client = client;
     }
@@ -50,21 +57,27 @@ public class CommandSend extends Command {
         if (parameters != null) {
             String p = (String) parameters;
             if (p.equals("withTimestamp")) {
-                String text = client.getTextContent();
-                LocalDateTime now = LocalDateTime.now();
-                String date = now.format(formatter);
-                client.setText(date + Keys.chord(Keys.SHIFT, Keys.ENTER) + text);
+                try {
+                    String text = client.getTextContent();
+                    LocalDateTime now = LocalDateTime.now();
+                    String date = now.format(formatter);
+                    client.setText(date + Keys.chord(Keys.SHIFT, Keys.ENTER) + text);
+                } catch (TimeoutWhatsAppWebException | NoSuchWhatsAppWebElementException ex) {
+                    LOGGER.warn("Something went wrong in setting the timestamp for the message. " + ex.getMessage());
+                    LOGGER.debug("Error...",ex);
+                }
             }
         }
-        int timeoutInSeconds = 3;
-        ProgressBar progressBar = ProgressBar.getTimerBasedProgressBar(timeoutInSeconds, ChronoUnit.SECONDS);
+        ProgressBar progressBar = ProgressBar.getTimerBasedProgressBar(ChronoConstants.DURATION_OF_3_SECONDS, ChronoUnit.SECONDS);
         progressBar.start();
-        boolean sended = client.send(timeoutInSeconds);
-        progressBar.finish();
-        if (sended) {
-            Console.writeLine("The message was successfully sent to " + client.getConversationInfoHeader());
-        } else {
-            Console.writeLine("Couldn't send message. Be sure you opened a chat window and inserted some text and that you are authenticated.");
+        try {
+            client.send(ChronoConstants.DURATION_OF_3_SECONDS);
+            Console.writeLine("The message was successfully sent to " + client.getConversationInfoHeaderText());
+        } catch (TimeoutWhatsAppWebException ex) {
+            LOGGER.warn("Something went wrong in sending message. " + ex.getMessage());
+            LOGGER.debug("Error...",ex);
+        } finally {
+            progressBar.finish();
         }
         return Optional.empty();
     }

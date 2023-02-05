@@ -24,14 +24,18 @@
 package de.kswmd.whatsapptool.quartz;
 
 import de.kswmd.whatsapptool.MiscConstants;
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
+import de.kswmd.whatsapptool.utils.ChronoConstants;
+import de.kswmd.whatsapptool.utils.FormatterConstants;
 import de.kswmd.whatsapptool.utils.Settings;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
@@ -53,9 +57,6 @@ public class MaintenanceJob implements Job {
     private final Logger LOGGER = LogManager.getLogger();
 
     final static String WHATSAPP_CLIENT = "whatsappclient";
-    final DateTimeFormatter DATE_TIME_FORMAT_LOCALE_DE = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss");
-    final DateTimeFormatter DATE_FORMAT_YYYY_MM = DateTimeFormatter.ofPattern("yyyy-MM");
-    final DateTimeFormatter DATE_FORMAT_MM_dd_YYYY = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 
     public MaintenanceJob() {
         //LOGGER.info("Constructor called...");
@@ -68,11 +69,10 @@ public class MaintenanceJob implements Job {
             LocalDateTime now = LocalDateTime.now();
             String adminPhoneNumber = StringUtils.trimToNull(Settings.getInstance().getAdminPhoneNumber());
             if (adminPhoneNumber != null) {
-                WhatsAppClient client = (WhatsAppClient) context.getJobDetail().getJobDataMap().get(WHATSAPP_CLIENT);
+                WhatsAppWebClient client = (WhatsAppWebClient) context.getJobDetail().getJobDataMap().get(WHATSAPP_CLIENT);
                 client.open(adminPhoneNumber);
-                client.waitTilTextIsAvailable(10);
                 StringBuilder sb = new StringBuilder();
-                sb.append(now.format(DATE_TIME_FORMAT_LOCALE_DE));
+                sb.append(now.format(FormatterConstants.DATE_TIME_FORMAT_LOCALE_DE));
                 String hostname = "unknown";
                 try {
                     hostname = InetAddress.getLocalHost().getHostName();
@@ -88,7 +88,7 @@ public class MaintenanceJob implements Job {
                 try {
                     LocalDateTime yesterday = now.minusDays(1);
                     String logFilePath = System.getProperty(MiscConstants.KEY_LOG_FILE_PATH);
-                    String fileToRead = yesterday.format(DATE_FORMAT_YYYY_MM) + "/app-" + yesterday.format(DATE_FORMAT_MM_dd_YYYY) + ".message-job-error-log.txt";
+                    String fileToRead = yesterday.format(FormatterConstants.DATE_FORMAT_YYYY_MM) + "/app-" + yesterday.format(FormatterConstants.DATE_FORMAT_MM_dd_YYYY) + ".message-job-error-log.txt";
                     String content = Files.readString(Paths.get(logFilePath + "/" + fileToRead));
                     content = content.replaceAll("\n", Keys.chord(Keys.SHIFT, Keys.ENTER));
                     sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
@@ -96,15 +96,15 @@ public class MaintenanceJob implements Job {
                     if (!StringUtils.trimToEmpty(content).isEmpty()) {
                         sb.append(content);
                     } else {
-                        sb.append("No errors logged.");
+                        sb.append("No jobs executed for yesterday.");
                     }
                 } catch (IOException ex) {
                     LOGGER.error("Couldn't read message-job-error-log.txt...", ex);
                 }
-                client.setText(sb.toString());
-                client.send(3);
+                client.setText(sb.toString(),ChronoConstants.DURATION_OF_10_SECONDS);
+                client.send(ChronoConstants.DURATION_OF_3_SECONDS);
             }
-        } catch (Exception ex) {
+        } catch (TimeoutWhatsAppWebException ex) {
             LOGGER.error("Fire Maintenance job failed...", ex);
         }
     }

@@ -23,7 +23,7 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.Optional;
 
 /**
@@ -32,9 +32,9 @@ import java.util.Optional;
  */
 public class CommandCheckForUpdate extends Command {
 
-    private final WhatsAppClient client;
+    private final WhatsAppWebClient client;
 
-    public CommandCheckForUpdate(WhatsAppClient client) {
+    public CommandCheckForUpdate(WhatsAppWebClient client) {
         super(COMMAND_CHECK_UPDATE, "Checks if an update is available.");
         this.client = client;
     }

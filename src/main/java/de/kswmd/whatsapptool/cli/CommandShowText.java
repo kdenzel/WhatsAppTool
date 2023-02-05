@@ -23,8 +23,12 @@
  */
 package de.kswmd.whatsapptool.cli;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.NoSuchWhatsAppWebElementException;
+import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  *
@@ -32,16 +36,22 @@ import java.util.Optional;
  */
 public class CommandShowText extends Command {
 
-    private final WhatsAppClient client;
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final WhatsAppWebClient client;
 
-    public CommandShowText(WhatsAppClient client) {
+    public CommandShowText(WhatsAppWebClient client) {
         super(COMMAND_SHOW_TEXT, "Shows the text of the textbox.");
         this.client = client;
     }
 
     @Override
     public Optional<Object> execute(Object parameters) {
-        client.printTextContent();
+        try {
+            Console.writeLine(client.getTextContent());
+        } catch (TimeoutWhatsAppWebException | NoSuchWhatsAppWebElementException ex) {
+            LOGGER.warn("Somtehing went wrong in getting content of chat textbox.");
+            LOGGER.debug("Error",ex);
+        }
         return Optional.empty();
     }
 

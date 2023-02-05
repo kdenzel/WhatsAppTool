@@ -32,8 +32,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jline.reader.UserInterruptException;
 
 /**
@@ -46,7 +44,6 @@ public class ProgressBar implements Runnable {
 
     private volatile Duration duration;
     private volatile ChronoUnit unit;
-    private long total;
     private boolean finished;
     private volatile long curserPosition;
     private Thread t;
@@ -54,7 +51,15 @@ public class ProgressBar implements Runnable {
     private ProgressBar() {
     }
 
+    public static ProgressBar getTimerBasedProgressBarInSeconds(long total) {
+        return getTimerBasedProgressBar(Duration.of(total, ChronoUnit.SECONDS), ChronoUnit.SECONDS);
+    }
+
     public static ProgressBar getTimerBasedProgressBar(long total, ChronoUnit unit) {
+        return getTimerBasedProgressBar(Duration.of(total, unit), unit);
+    }
+
+    public static ProgressBar getTimerBasedProgressBar(Duration duration, ChronoUnit unit) {
         Optional<ProgressBar> optional = pool.stream().filter(p -> p.finished).findFirst();
         ProgressBar p;
         if (optional.isPresent()) {
@@ -63,8 +68,7 @@ public class ProgressBar implements Runnable {
             p = new ProgressBar();
             pool.add(p);
         }
-        p.total = total;
-        p.duration = Duration.of(total, unit);
+        p.duration = duration;
         p.unit = unit;
         p.finished = true;
         return p;
@@ -199,7 +203,6 @@ public class ProgressBar implements Runnable {
         p1.start();
         ProgressBar p2 = ProgressBar.getTimerBasedProgressBar(1000 * 400, ChronoUnit.MILLIS);
         p2.start();
-        Logger LOGGER = LogManager.getLogger();
 
         long lt = System.currentTimeMillis();
         while (true) {

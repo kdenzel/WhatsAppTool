@@ -21,35 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.kswmd.whatsapptool.cli;
+package de.kswmd.whatsapptool.utils;
 
-import de.kswmd.whatsapptool.WhatsAppWebClient;
-import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
+import java.time.Duration;
 
 /**
+ * Class for storing Durations that are used a lot.
  *
  * @author Kai Denzel
  */
-public class CommandOpen extends Command {
+public final class ChronoConstants {
 
-    private final WhatsAppWebClient client;
+    /**
+     * Millis
+     */
+    public static final Duration DURATION_OF_500_MILLIS = Duration.ofMillis(500);
+    /**
+     * Seconds
+     */
+    public static final Duration DURATION_OF_3_SECONDS = Duration.ofSeconds(3);
+    public static final Duration DURATION_OF_5_SECONDS = Duration.ofSeconds(5);
+    public static final Duration DURATION_OF_10_SECONDS = Duration.ofSeconds(10);
+    public static final Duration DURATION_OF_30_SECONDS = Duration.ofSeconds(30);
+    
 
-    public CommandOpen(WhatsAppWebClient client) {
-        super(COMMAND_OPEN, "Opens the chat window with the specified Phonenumber. The Number must start with the country code.");
-        this.client = client;
-    }
-
-    @Override
-    public Optional<Object> execute(Object parameters) {
-        String p = (String) parameters;
-        if (!StringUtils.trimToEmpty(p).isEmpty()) {
-            client.open(p);
-        } else {
-            Console.writeLine("Please enter a Phonenumber as Parameter.");
-        }
-        Console.writeLine("Opened URL " + client.getUrl());
-        return Optional.empty();
+    private ChronoConstants() {
     }
 
 }

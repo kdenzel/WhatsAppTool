@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2023 Kai Denzel.
+ * Copyright 2023 kdenzel.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,39 +24,43 @@
 package de.kswmd.whatsapptool.cli;
 
 import de.kswmd.whatsapptool.WhatsAppWebClient;
-import de.kswmd.whatsapptool.contacts.MessageDatabase;
-import de.kswmd.whatsapptool.quartz.ScheduleManager;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  *
- * @author Kai Denzel
+ * @author kdenzel
  */
-public class CommandReloadNotifications extends Command {
+public class CommandPrintDOM extends Command {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final MessageDatabase messageDatabase;
+
     private final WhatsAppWebClient client;
 
-    public CommandReloadNotifications(final MessageDatabase messageDatabase, final WhatsAppWebClient client) {
-        super(COMMAND_RELOAD_NOTIFICATIONS_JOB, "Reloads the notifications.xml with all its Triggers.");
-        this.messageDatabase = messageDatabase;
+    public CommandPrintDOM(final WhatsAppWebClient client) {
+        super(COMMAND_PRINT_DOM, "Prints the DOM to the console and if available to the specified file.");
         this.client = client;
     }
 
     @Override
     public Optional<Object> execute(Object parameters) {
-        ScheduleManager manager = ScheduleManager.getInstance();
-        try {
-            messageDatabase.loadEntities();
-            manager.scheduleMessagesJob(messageDatabase.getEntities(), client);
-            manager.resumeAllJobs();
-            Console.writeLine("Successfully scheduled the job.");
-        } catch (Exception ex) {
-            LOGGER.error("Couldn't create CronJob for notifications.", ex);
+        String p = String.valueOf(parameters);
+        String source = client.getDriver().getPageSource();
+        if (!StringUtils.trimToEmpty(p).isEmpty()) {
+            try {
+                Files.write(Path.of(p), source.getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+            } catch (IOException ex) {
+                LOGGER.warn("Couldn't create file. " + ex.getMessage());
+                LOGGER.debug("Error, couldn't create file...", ex);
+            }
         }
+        Console.writeLine(source);
         return Optional.empty();
     }
 

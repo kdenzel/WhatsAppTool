@@ -23,7 +23,7 @@
  */
 package de.kswmd.whatsapptool.quartz;
 
-import de.kswmd.whatsapptool.WhatsAppClient;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.contacts.Entity;
 import de.kswmd.whatsapptool.contacts.Message;
 import java.text.SimpleDateFormat;
@@ -91,15 +91,15 @@ public class ScheduleManager {
         return false;
     }
 
-    public void scheduleMaintenanceJob(WhatsAppClient whatsAppClient) {
+    public void scheduleMaintenanceJob(WhatsAppWebClient whatsAppClient) {
         scheduleMaintenanceJob(whatsAppClient, " 0 30 3 * * ?");
     }
 
-    public void scheduleMaintenanceJob(WhatsAppClient whatsAppClient, String cron) {
+    public void scheduleMaintenanceJob(WhatsAppWebClient whatsAppClient, String cron) {
         scheduleMaintenanceJob(whatsAppClient, cronSchedule(cron));
     }
 
-    public void scheduleMaintenanceJob(WhatsAppClient whatsAppClient, ScheduleBuilder schedule) {
+    public void scheduleMaintenanceJob(WhatsAppWebClient whatsAppClient, ScheduleBuilder schedule) {
         JobDetail job = newJob(MaintenanceJob.class)
                 .withIdentity("statusReportJob", "maintenance")
                 .build();
@@ -119,7 +119,7 @@ public class ScheduleManager {
         LOGGER.info("Next maintenance time = " + SimpleDateFormat.getDateTimeInstance().format(trigger.getNextFireTime()));
     }
 
-    public void scheduleMessagesJob(List<Entity> entities, final WhatsAppClient client) {
+    public void scheduleMessagesJob(List<Entity> entities, final WhatsAppWebClient client) {
         JobDetail handleCronMessagesJob = newJob(HandleCronMessageJob.class)
                 .withIdentity("messagesJob", "contactPersons")
                 .build();
