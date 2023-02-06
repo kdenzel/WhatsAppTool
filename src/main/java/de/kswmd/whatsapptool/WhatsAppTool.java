@@ -101,6 +101,11 @@ public class WhatsAppTool {
             WhatsAppWebClient client = new WhatsAppWebClient(driver);
             scheduleManager.scheduleMaintenanceJob(client);
             scheduleManager.pauseAllJobs();
+            LOGGER.trace("This is a trace message.");
+            LOGGER.debug("This is a debug message.");
+            LOGGER.info("This is an info message.");
+            LOGGER.warn("This is a warn message.");
+            LOGGER.error("This is an error message.");
             CLI cli = new CLI(client);
             cli.start();
         } catch (Exception ex) {

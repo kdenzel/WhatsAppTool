@@ -89,7 +89,7 @@ public class ProgressBar implements Runnable {
             throw new IllegalStateException("Thread for Progressbar is not finished yet.");
         }
         t = new Thread(this);
-        curserPosition = Console.getInstance().setCursorDownAndWrite(append);
+        curserPosition = Console.write(append);
         finished = false;
         t.start();
     }
@@ -155,7 +155,7 @@ public class ProgressBar implements Runnable {
         return millisToSleep;
     }
 
-    public static synchronized void printProgress(final long start, final long total, final long current, final long curserPos) {
+    public static synchronized void printProgress(final long start, final long total, final long current, final long cursorPos) {
         long eta = current == 0 ? 0
                 : (total - current) * (System.currentTimeMillis() - start) / current;
 
@@ -164,14 +164,14 @@ public class ProgressBar implements Runnable {
                         TimeUnit.MILLISECONDS.toMinutes(eta) % TimeUnit.HOURS.toMinutes(1),
                         TimeUnit.MILLISECONDS.toSeconds(eta) % TimeUnit.MINUTES.toSeconds(1));
 
-        long curserPosConsole = Console.getInstance().getCurserPosition();
+        long curserPosConsole = Console.getCursorPosition();
         Console.CursorMovement move = Console.CursorMovement.NONE;
         int offset = 0;
-        if (curserPos < curserPosConsole) {
-            offset = (int) (curserPosConsole - curserPos);
+        if (cursorPos < curserPosConsole) {
+            offset = (int) (curserPosConsole - cursorPos);
             move = Console.CursorMovement.UP;
-        } else if (curserPos > curserPosConsole) {
-            offset = (int) (curserPos - curserPosConsole);
+        } else if (cursorPos > curserPosConsole) {
+            offset = (int) (cursorPos - curserPosConsole);
             move = Console.CursorMovement.DOWN;
         }
         StringBuilder string = new StringBuilder(140);
@@ -193,12 +193,12 @@ public class ProgressBar implements Runnable {
                 .append(String.format(" %d/%d, ETA: %s", current, total, etaHms))
                 .append(" ");
 
-        Console.writeAndMoveCursor(string.toString(), offset, move);
+        Console.writeAndMoveCursor(offset, string.toString(), move);
     }
 
     public static void main(String[] args) {
         System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
-        Console.getInstance().initLineReader(args);
+        Console.initLineReader(args);
         ProgressBar p1 = ProgressBar.getTimerBasedProgressBar(800, ChronoUnit.SECONDS);
         p1.start();
         ProgressBar p2 = ProgressBar.getTimerBasedProgressBar(1000 * 400, ChronoUnit.MILLIS);
@@ -206,12 +206,11 @@ public class ProgressBar implements Runnable {
 
         long lt = System.currentTimeMillis();
         while (true) {
-            long ct = System.currentTimeMillis();
             try {
                 String rl = Console.readLine();
-
+                long ct = System.currentTimeMillis();
                 if (ct > lt + 5000) {
-                    Console.getInstance().setCursorDownAndWrite("SOSO");
+                    Console.write("SOSO");
                     lt = ct;
                 }
 

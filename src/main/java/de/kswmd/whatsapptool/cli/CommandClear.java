@@ -37,7 +37,7 @@ public class CommandClear extends Command {
 
     @Override
     public Optional<Object> execute(Object parameters) {
-        Console.getInstance().clear();
+        Console.clear();
         return Optional.empty();
     }
 

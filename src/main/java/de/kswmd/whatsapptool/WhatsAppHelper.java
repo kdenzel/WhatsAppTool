@@ -24,9 +24,13 @@
 package de.kswmd.whatsapptool;
 
 import de.kswmd.whatsapptool.contacts.ChatListBean;
+import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
+import de.kswmd.whatsapptool.contacts.Message;
+import de.kswmd.whatsapptool.utils.ChronoConstants;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -94,7 +98,7 @@ public class WhatsAppHelper {
                     } catch (NoSuchElementException ex) {
                         LOGGER.trace("Element time div not found...", ex);
                     }
-                    WebElement title = listItem.findElement(By.xpath(".//span[@dir='auto']"));
+                    WebElement title = listItem.findElement(By.xpath(".//span[@dir='auto' and @title]"));
                     //Check if it is a message or a contact
                     try {
                         title.findElement(By.xpath("./ancestor::div[contains(@data-testid,'chatlist-message')]"));
@@ -133,7 +137,7 @@ public class WhatsAppHelper {
                 }
                 list.add(bean);
             } catch (Exception ex) {
-                LOGGER.trace("Couldn't parse List-Item to Object...",ex);
+                LOGGER.trace("Couldn't parse List-Item to Object...", ex);
             }
         }
 //        if (listItems.size() < list.size()) {
@@ -142,7 +146,78 @@ public class WhatsAppHelper {
 
         Collections.sort(list);
         return list;
+    }
 
+    /**
+     * Used for sending messages in concurrent situations like jobs with many
+     * quartz triggers. It is a static synchronized method allowing only one
+     * thread at a time sending messages
+     *
+     * @param m
+     * @param client
+     * @throws TimeoutWhatsAppWebException
+     * @throws PopUpDialogAvailableException
+     */
+    public static synchronized void sendMessage(final Message m, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException {
+        sendMessage(m.getEntity().getIdentifier(), m.getContent(), client);
+    }
+
+    /**
+     * Used for sending messages in concurrent situations like jobs with many
+     * quartz triggers. It is a static synchronized method allowing only one
+     * thread at a time sending messages
+     *
+     * @param identifier
+     * @param content
+     * @param client
+     * @throws TimeoutWhatsAppWebException
+     * @throws PopUpDialogAvailableException
+     */
+    public static synchronized void sendMessage(final String identifier, final String content, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException {
+        client.search(identifier, ChronoConstants.DURATION_OF_5_SECONDS);
+        WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_500_MILLIS);
+        Optional<ChatListBean> optionalChatListBean = WhatsAppHelper
+                .generateFromWebElement(chatList)
+                .stream()
+                .filter(cbl -> cbl.getType().equals(CONTACT))
+                .findFirst();
+        if (optionalChatListBean.isPresent()) {
+            ChatListBean clb = optionalChatListBean.get();
+            if(!clb.getTitle().equals(identifier)){
+                LOGGER.warn("Identifier " 
+                        + identifier 
+                        + " does not match " 
+                        + clb.getTitle());
+            }
+            client.clickElement(
+                    By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"
+                    + "[contains(@style, 'translateY(" + clb.getSort() + "px);')]")
+            );
+        } else {
+            client.open(identifier);
+            handlePossiblePopUpDialog(client);
+        }
+
+        client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
+        client.send(ChronoConstants.DURATION_OF_3_SECONDS);
+        client.waitForTimeOut(ChronoConstants.DURATION_OF_500_MILLIS);
+    }
+
+    private static synchronized void handlePossiblePopUpDialog(final WhatsAppWebClient client) throws PopUpDialogAvailableException {
+        String content = null;
+        WebElement element = null;
+        try {
+            element = client.getPopUp(ChronoConstants.DURATION_OF_5_SECONDS);
+            WebElement contents = element.findElement(By.xpath(".//div[@data-testid='popup-contents']"));
+            WebElement button = element.findElement(By.xpath(".//div[@data-testid='popup-controls-ok']"));
+            button.click();
+            content = contents.getText();
+        } catch (TimeoutWhatsAppWebException ex) {
+            LOGGER.trace("Error in handling PopUp-Dialog...", ex);
+        }
+        if (element != null) {
+            throw new PopUpDialogAvailableException(content);
+        }
     }
 
 }

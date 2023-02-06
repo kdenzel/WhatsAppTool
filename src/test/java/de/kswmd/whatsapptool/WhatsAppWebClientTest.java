@@ -24,6 +24,7 @@
 package de.kswmd.whatsapptool;
 
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
+import de.kswmd.whatsapptool.cli.Console;
 import de.kswmd.whatsapptool.contacts.ChatListBean;
 import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
 import de.kswmd.whatsapptool.contacts.Entity;
@@ -38,6 +39,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
@@ -184,6 +186,17 @@ public class WhatsAppWebClientTest {
             client.appendText("test");
         } catch (TimeoutWhatsAppWebException ex) {
             LOGGER.error("", ex);
+        }
+    }
+    
+    //@Test
+    public void testSendMessage(){
+        try {
+            client.open();
+            client.waitForTimeOut(10);
+            WhatsAppHelper.sendMessage("+491605768854", "Dies ist eine automatisierte Testnachricht", client);
+        } catch (TimeoutWhatsAppWebException | PopUpDialogAvailableException ex) {
+            java.util.logging.Logger.getLogger(WhatsAppWebClientTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

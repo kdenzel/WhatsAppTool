@@ -32,6 +32,8 @@ import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
 import de.kswmd.whatsapptool.contacts.Message;
 import de.kswmd.whatsapptool.utils.ChronoConstants;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,43 +59,13 @@ public class HandleCronMessageJob implements Job {
     @Override
     public void execute(JobExecutionContext jec) throws JobExecutionException {
         Message m = (Message) jec.getTrigger().getJobDataMap().get(KEY_MESSAGE);
-        LOGGER.info("Start sending message to " + m.getEntity().getIdentifier() + ": " + m.getContent());
         WhatsAppWebClient client = (WhatsAppWebClient) jec.getJobDetail().getJobDataMap().get(KEY_WHATSAPP_CLIENT);
-
         try {
-            client.search(m.getEntity().getIdentifier(), ChronoConstants.DURATION_OF_5_SECONDS);
-            WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_500_MILLIS);
-            List<ChatListBean> elements = WhatsAppHelper.generateFromWebElement(chatList).stream().filter(cbl -> cbl.getType().equals(CONTACT)).collect(Collectors.toList());
-            if (!elements.isEmpty()) {
-                ChatListBean clb = elements.get(0);
-                client.clickElement(By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"));
-            } else {
-                client.open(m.getEntity().getIdentifier());
-                handlePossiblePopUpDialog(client);
-            }
-
-            client.setText(m.getContent(), ChronoConstants.DURATION_OF_10_SECONDS);
-            client.send(ChronoConstants.DURATION_OF_3_SECONDS);
+            LOGGER.info("Start sending message to " + m.getEntity().getIdentifier() + ": " + m.getContent());
+            WhatsAppHelper.sendMessage(m, client);
             LOGGER.info("Successfully sent message. " + m);
         } catch (TimeoutWhatsAppWebException | PopUpDialogAvailableException ex) {
             LOGGER.error("Job execution failed... \n" + m + "\n", ex);
-        }
-    }
-
-    private synchronized void handlePossiblePopUpDialog(final WhatsAppWebClient client) throws PopUpDialogAvailableException {
-        String content = null;
-        WebElement element = null;
-        try {
-            element = client.getPopUp(ChronoConstants.DURATION_OF_5_SECONDS);
-            WebElement contents = element.findElement(By.xpath(".//div[@data-testid='popup-contents']"));
-            WebElement button = element.findElement(By.xpath(".//div[@data-testid='popup-controls-ok']"));
-            button.click();
-            content = contents.getText();
-        } catch (TimeoutWhatsAppWebException ex) {
-            LOGGER.trace("Error in handling PopUp-Dialog...", ex);
-        }
-        if (element != null) {
-            throw new PopUpDialogAvailableException(content);
         }
     }
 

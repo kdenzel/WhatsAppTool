@@ -95,7 +95,7 @@ public class CLI {
         commands.add(new CommandPrintDOM(client));
         commands.add(new CommandReloadNotifications(MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile()), client));
         commands.add(new CommandSearchContacts(client));
-        Console.getInstance().initLineReader(
+        Console.initLineReader(
                 commands
                         .stream()
                         .map(c -> c.getCommand()).toArray(String[]::new)
@@ -128,7 +128,7 @@ public class CLI {
 
             progressBar = ProgressBar.getTimerBasedProgressBar(ChronoConstants.DURATION_OF_30_SECONDS, ChronoUnit.SECONDS);
             progressBar.start(Console.LINE_BREAK + "Time for timeout in seconds" + Console.LINE_BREAK);
-            long lineNumber = Console.getInstance().setCursorDownAndWrite(Console.LINE_BREAK + "Progressbar" + Console.LINE_BREAK);
+            final long lineNumber = Console.write(Console.LINE_BREAK + "Progressbar" + Console.LINE_BREAK);
             long startTime = System.currentTimeMillis();
             long currentTime = startTime;
             long endTime = System.currentTimeMillis() + ChronoConstants.DURATION_OF_30_SECONDS.toMillis();

@@ -35,6 +35,8 @@ public final class FormatterConstants {
     public static final DateTimeFormatter DATE_TIME_FORMAT_LOCALE_DE = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss");
     public static final DateTimeFormatter DATE_FORMAT_YYYY_MM = DateTimeFormatter.ofPattern("yyyy-MM");
     public static final DateTimeFormatter DATE_FORMAT_MM_dd_YYYY = DateTimeFormatter.ofPattern("MM-dd-yyyy");
-    
-    private FormatterConstants(){}
+    public static final DateTimeFormatter TIME_FORMAT_HH_mm_ss_SSS = DateTimeFormatter.ofPattern("HH:mm:ss:SSS");
+
+    private FormatterConstants() {
+    }
 }

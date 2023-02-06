@@ -39,6 +39,8 @@ public final class ChronoConstants {
     /**
      * Seconds
      */
+    public static final Duration DURATION_OF_1_SECOND = Duration.ofSeconds(1);
+    public static final Duration DURATION_OF_2_SECONDS = Duration.ofSeconds(2);
     public static final Duration DURATION_OF_3_SECONDS = Duration.ofSeconds(3);
     public static final Duration DURATION_OF_5_SECONDS = Duration.ofSeconds(5);
     public static final Duration DURATION_OF_10_SECONDS = Duration.ofSeconds(10);
