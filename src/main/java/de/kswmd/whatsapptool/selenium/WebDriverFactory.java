@@ -43,6 +43,7 @@ public final class WebDriverFactory {
 
     public enum Browser {
         CHROME,
+        CHROMIUM,
         FIREFOX
     }
 
@@ -63,12 +64,17 @@ public final class WebDriverFactory {
     public synchronized WebDriver createWebDriver(Browser browser) {
         WebDriver webDriver;
         switch (browser) {
-            case CHROME:
-                webDriver = createChromeWebDriver();
-                break;
             case FIREFOX:
+                LOGGER.info("Installing driver for chromium browser.");
+                WebDriverManager.firefoxdriver().setup();
                 webDriver = createFirefoxWebDriver();
                 break;
+            case CHROME:
+                LOGGER.info("Installing driver for chrome browser.");
+                WebDriverManager.chromedriver().setup();
+            case CHROMIUM:
+                LOGGER.info("Installing driver for chromium browser.");
+                WebDriverManager.chromiumdriver().setup();
             default:
                 webDriver = createChromeWebDriver();
                 break;
@@ -77,15 +83,14 @@ public final class WebDriverFactory {
         return webDriver;
     }
 
-    public synchronized WebDriver createChromeWebDriver() {
-        WebDriverManager.chromedriver().setup();
+    private synchronized WebDriver createChromeWebDriver() {
         Settings settings = Settings.getInstance();
         String userDataDir = settings.getProfilePathChrome();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--user-data-dir=" + userDataDir);
         if (!withGui) {
             options.addArguments("--headless", "--disable-gpu", "--nogpu", "--window-size=1920,1080", "--ignore-certificate-errors", "--no-sandbox", "--enable-javascript");
-            options.addArguments("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+            //options.addArguments("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
         }
         WebDriver driver = new ChromeDriver(options);
         Object userAgent = ((ChromeDriver) driver).executeScript("return navigator.userAgent;");
@@ -93,8 +98,7 @@ public final class WebDriverFactory {
         return driver;
     }
 
-    public synchronized WebDriver createFirefoxWebDriver() {
-        WebDriverManager.firefoxdriver().setup();
+    private synchronized WebDriver createFirefoxWebDriver() {
         Settings settings = Settings.getInstance();
         String userDataDir = settings.getProfilePathFirefox();
         LOGGER.debug("user-data-dir=" + userDataDir);

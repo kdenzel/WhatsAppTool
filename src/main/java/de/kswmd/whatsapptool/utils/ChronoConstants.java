@@ -44,6 +44,7 @@ public final class ChronoConstants {
     public static final Duration DURATION_OF_3_SECONDS = Duration.ofSeconds(3);
     public static final Duration DURATION_OF_5_SECONDS = Duration.ofSeconds(5);
     public static final Duration DURATION_OF_10_SECONDS = Duration.ofSeconds(10);
+    public static final Duration DURATION_OF_15_SECONDS = Duration.ofSeconds(15);
     public static final Duration DURATION_OF_30_SECONDS = Duration.ofSeconds(30);
     
 

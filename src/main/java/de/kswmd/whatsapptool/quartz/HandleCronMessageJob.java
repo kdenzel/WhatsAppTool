@@ -27,18 +27,10 @@ import de.kswmd.whatsapptool.PopUpDialogAvailableException;
 import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
 import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.WhatsAppHelper;
-import de.kswmd.whatsapptool.contacts.ChatListBean;
-import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
 import de.kswmd.whatsapptool.contacts.Message;
-import de.kswmd.whatsapptool.utils.ChronoConstants;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -64,7 +56,7 @@ public class HandleCronMessageJob implements Job {
             LOGGER.info("Start sending message to " + m.getEntity().getIdentifier() + ": " + m.getContent());
             WhatsAppHelper.sendMessage(m, client);
             LOGGER.info("Successfully sent message. " + m);
-        } catch (TimeoutWhatsAppWebException | PopUpDialogAvailableException ex) {
+        } catch (Exception ex) {
             LOGGER.error("Job execution failed... \n" + m + "\n", ex);
         }
     }

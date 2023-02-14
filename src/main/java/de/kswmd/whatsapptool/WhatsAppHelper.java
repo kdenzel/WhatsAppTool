@@ -23,10 +23,13 @@
  */
 package de.kswmd.whatsapptool;
 
+import de.kswmd.whatsapptool.cli.Console;
 import de.kswmd.whatsapptool.contacts.ChatListBean;
 import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
 import de.kswmd.whatsapptool.contacts.Message;
 import de.kswmd.whatsapptool.utils.ChronoConstants;
+import de.kswmd.whatsapptool.utils.ProgressBar;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -174,8 +177,18 @@ public class WhatsAppHelper {
      * @throws PopUpDialogAvailableException
      */
     public static synchronized void sendMessage(final String identifier, final String content, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException {
+        long startTime = System.currentTimeMillis();
+        final float totalInSeconds = 40;
+        final long total = 100;
+        long curserPosition = Console.writeAtEnd("");
+        Console.writeLine();
+        ProgressBar.printProgress(startTime, total, 0, curserPosition);
         client.search(identifier, ChronoConstants.DURATION_OF_5_SECONDS);
-        WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_500_MILLIS);
+        ProgressBar.printProgress(startTime, total, Math.round(5 * totalInSeconds / 100), curserPosition);
+        client.waitForTimeOut(ChronoConstants.DURATION_OF_1_SECOND);
+        ProgressBar.printProgress(startTime, total, Math.round(6 * totalInSeconds / 100), curserPosition);
+        WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_1_SECOND);
+        ProgressBar.printProgress(startTime, total, Math.round(7 * totalInSeconds / 100), curserPosition);
         Optional<ChatListBean> optionalChatListBean = WhatsAppHelper
                 .generateFromWebElement(chatList)
                 .stream()
@@ -183,35 +196,46 @@ public class WhatsAppHelper {
                 .findFirst();
         if (optionalChatListBean.isPresent()) {
             ChatListBean clb = optionalChatListBean.get();
-            if(!clb.getTitle().equals(identifier)){
-                LOGGER.warn("Identifier " 
-                        + identifier 
-                        + " does not match " 
+            if (clb.getTitle().equals(identifier)) {
+                client.clickElement(By.xpath("//span[@dir='auto' and @title='"
+                        + clb.getTitle()
+                        + "']/ancestor::div[contains(@data-testid,'list-item')]"),
+                        ChronoConstants.DURATION_OF_1_SECOND
+                );
+            } else {
+                LOGGER.warn("Identifier "
+                        + identifier
+                        + " does not match "
                         + clb.getTitle());
+                client.clickElement(
+                        By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"
+                                + "[contains(@style, 'translateY(" + clb.getSort() + "px);')]"),
+                        ChronoConstants.DURATION_OF_1_SECOND
+                );
             }
-            client.clickElement(
-                    By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"
-                    + "[contains(@style, 'translateY(" + clb.getSort() + "px);')]")
-            );
         } else {
             client.open(identifier);
             handlePossiblePopUpDialog(client);
         }
-
+        ProgressBar.printProgress(startTime, total, Math.round(26 * totalInSeconds / 100), curserPosition);
         client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
+        ProgressBar.printProgress(startTime, total, Math.round(36 * totalInSeconds / 100), curserPosition);
         client.send(ChronoConstants.DURATION_OF_3_SECONDS);
+        ProgressBar.printProgress(startTime, total, Math.round(39 * totalInSeconds / 100), curserPosition);
         client.waitForTimeOut(ChronoConstants.DURATION_OF_500_MILLIS);
+        ProgressBar.printProgress(startTime, total, total, curserPosition);
     }
 
     private static synchronized void handlePossiblePopUpDialog(final WhatsAppWebClient client) throws PopUpDialogAvailableException {
         String content = null;
         WebElement element = null;
         try {
-            element = client.getPopUp(ChronoConstants.DURATION_OF_5_SECONDS);
-            WebElement contents = element.findElement(By.xpath(".//div[@data-testid='popup-contents']"));
-            WebElement button = element.findElement(By.xpath(".//div[@data-testid='popup-controls-ok']"));
+            element = client.getPopUp(ChronoConstants.DURATION_OF_15_SECONDS);
+            WebElement contents = client.getElement(By.xpath("//div[@data-testid='confirm-popup']//div[@data-testid='popup-contents']"), ChronoConstants.DURATION_OF_2_SECONDS);
+            WebElement button = client.getElement(By.xpath("//div[@data-testid='confirm-popup']//div[@data-testid='popup-controls-ok']"), ChronoConstants.DURATION_OF_2_SECONDS);
             button.click();
             content = contents.getText();
+            client.waitForTimeOut(ChronoConstants.DURATION_OF_500_MILLIS);
         } catch (TimeoutWhatsAppWebException ex) {
             LOGGER.trace("Error in handling PopUp-Dialog...", ex);
         }

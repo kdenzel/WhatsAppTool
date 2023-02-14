@@ -198,7 +198,7 @@ public final class Console extends AbstractAppender {
      * @return
      */
     public static synchronized long write(String specialCodeBefore, Object o, String specialCodeAfter) {
-        return write("",specialCodeBefore, o, specialCodeAfter);
+        return write("", specialCodeBefore, o, specialCodeAfter);
     }
 
     /**
@@ -214,6 +214,28 @@ public final class Console extends AbstractAppender {
     public static synchronized long write(String cursorMovement, String specialCodeBefore, Object o, String specialCodeAfter) {
         instance.w(cursorMovement, specialCodeBefore, o, specialCodeAfter);
         return instance.cursorPosition;
+    }
+
+    /**
+     * Sets cursor down and writes at end.
+     *
+     * @param specialCodeBefore
+     * @param o
+     * @param specialCodeAfter
+     * @return
+     */
+    public static synchronized long writeAtEnd(String specialCodeBefore, Object o, String specialCodeAfter) {
+        return instance.setCursorDownAndWrite(specialCodeBefore, o, specialCodeAfter);
+    }
+
+    /**
+     * Sets cursor down and writes at end.
+     *
+     * @param o
+     * @return
+     */
+    public static synchronized long writeAtEnd(Object o) {
+        return instance.setCursorDownAndWrite("", o, "");
     }
 
     /**
@@ -283,7 +305,7 @@ public final class Console extends AbstractAppender {
                 write(Console.getMoveCursorDownString(cursorOffset), specialCodeBefore, append, specialCodeAfter);
                 break;
             default:
-                write("",specialCodeBefore, append, specialCodeAfter);
+                write("", specialCodeBefore, append, specialCodeAfter);
                 break;
         }
     }
@@ -533,15 +555,15 @@ public final class Console extends AbstractAppender {
             String logMessage = new String(bytes);
             Level level = event.getLevel();
             if (level == Level.ERROR) {
-                Console.write(ConsoleColors.RED, logMessage, ConsoleColors.RESET);
+                Console.writeAtEnd(ConsoleColors.RED, logMessage, ConsoleColors.RESET);
             } else if (level == Level.WARN) {
-                Console.write(ConsoleColors.YELLOW, logMessage, ConsoleColors.RESET);
+                Console.writeAtEnd(ConsoleColors.YELLOW, logMessage, ConsoleColors.RESET);
             } else if (level == Level.DEBUG) {
-                Console.write(ConsoleColors.GREEN, logMessage, ConsoleColors.RESET);
+                Console.writeAtEnd(ConsoleColors.GREEN, logMessage, ConsoleColors.RESET);
             } else if (level == Level.TRACE) {
-                Console.write(ConsoleColors.PURPLE, logMessage, ConsoleColors.RESET);
+                Console.writeAtEnd(ConsoleColors.PURPLE, logMessage, ConsoleColors.RESET);
             } else {
-                Console.write(logMessage);
+                Console.writeAtEnd(logMessage);
             }
         } catch (Exception ex) {
             if (!ignoreExceptions()) {

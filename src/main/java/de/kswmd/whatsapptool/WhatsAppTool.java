@@ -27,7 +27,7 @@ import de.kswmd.whatsapptool.cli.CLI;
 import de.kswmd.whatsapptool.quartz.ScheduleManager;
 import de.kswmd.whatsapptool.selenium.WebDriverFactory;
 import de.kswmd.whatsapptool.selenium.WebDriverFactory.Browser;
-import static de.kswmd.whatsapptool.selenium.WebDriverFactory.Browser.CHROME;
+import static de.kswmd.whatsapptool.selenium.WebDriverFactory.Browser.CHROMIUM;
 import de.kswmd.whatsapptool.utils.PathResolver;
 import java.util.Arrays;
 import java.util.List;
@@ -62,7 +62,7 @@ public class WhatsAppTool {
             Configurator.setLevel("de.kswmd.whatsapptool", Level.TRACE);
             LOGGER.trace("Setting level to trace.");
         }
-        Browser browser = CHROME;
+        Browser browser = CHROMIUM;
         if (argsList.contains("--browser")) {
             int index = argsList.indexOf("--browser");
             int nextIndex = index + 1;
