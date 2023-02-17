@@ -56,29 +56,29 @@ public class WhatsAppWebClient {
         this.driver = driver;
     }
 
-    public synchronized void open() {
+    public void open() {
         driver.get("https://" + WHATSAPP_WEB_URI);
         acceptAlert();
     }
 
-    public synchronized void open(String phone) {
+    public void open(String phone) {
         driver.get("https://" + WHATSAPP_WEB_URI + "/send?"
                 + "phone=" + URLEncoder.encode(phone, StandardCharsets.UTF_8));
         acceptAlert();
     }
 
-    public synchronized void openWithText(String phone, String text) {
+    public void openWithText(String phone, String text) {
         driver.get("https://" + WHATSAPP_WEB_URI + "/send?"
                 + "phone=" + URLEncoder.encode(phone, StandardCharsets.UTF_8)
                 + "&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8));
         acceptAlert();
     }
 
-    public synchronized void refresh() {
+    public void refresh() {
         driver.navigate().refresh();
     }
 
-    public synchronized WebElement getElement(By by, Duration timeout) throws TimeoutWhatsAppWebException {
+    public WebElement getElement(By by, Duration timeout) throws TimeoutWhatsAppWebException {
         try {
             return new WebDriverWait(driver, timeout)
                     .until(ExpectedConditions.presenceOfElementLocated(by));
@@ -89,7 +89,7 @@ public class WhatsAppWebClient {
         }
     }
 
-    public synchronized List<WebElement> getElements(By by, Duration timeout) throws TimeoutWhatsAppWebException {
+    public List<WebElement> getElements(By by, Duration timeout) throws TimeoutWhatsAppWebException {
         try {
             return new WebDriverWait(driver, timeout)
                     .until(ExpectedConditions.presenceOfAllElementsLocatedBy(by));
@@ -100,58 +100,58 @@ public class WhatsAppWebClient {
         }
     }
 
-    public synchronized WebElement getConversationTextField(Duration timeout) throws TimeoutWhatsAppWebException {
+    public WebElement getConversationTextField(Duration timeout) throws TimeoutWhatsAppWebException {
         String xPath = "//div[@role='textbox'][@data-testid='conversation-compose-box-input']";
         return getElement(By.xpath(xPath), timeout);
     }
 
-    public synchronized void appendText(String text, Duration timeout) throws TimeoutWhatsAppWebException {
+    public void appendText(String text, Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement textField = getConversationTextField(timeout);
         textField.sendKeys(text);
     }
 
-    public synchronized void appendText(String text) throws TimeoutWhatsAppWebException {
+    public void appendText(String text) throws TimeoutWhatsAppWebException {
         appendText(text, Duration.ZERO);
     }
 
-    public synchronized void setText(String text) throws TimeoutWhatsAppWebException {
+    public void setText(String text) throws TimeoutWhatsAppWebException {
         setText(text, Duration.ZERO);
     }
 
-    public synchronized void setText(String text, Duration timeout) throws TimeoutWhatsAppWebException {
+    public void setText(String text, Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement textField = getConversationTextField(timeout);
         textField.sendKeys(Keys.CONTROL + "a");
         textField.sendKeys(Keys.DELETE);
         textField.sendKeys(text);
     }
 
-    public synchronized void search(String text) throws TimeoutWhatsAppWebException {
+    public void search(String text) throws TimeoutWhatsAppWebException {
         search(text, Duration.ZERO);
     }
 
-    public synchronized void search(String text, Duration timeout) throws TimeoutWhatsAppWebException {
+    public void search(String text, Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement textField = getSearchTextBox(timeout);
         textField.sendKeys(Keys.CONTROL + "a");
         textField.sendKeys(Keys.DELETE);
         textField.sendKeys(text);
     }
 
-    public synchronized WebElement getSearchTextBox(Duration timeout) throws TimeoutWhatsAppWebException {
+    public WebElement getSearchTextBox(Duration timeout) throws TimeoutWhatsAppWebException {
         String xPath = "//div[@role='textbox'][@data-testid='chat-list-search']";
         return getElement(By.xpath(xPath), timeout);
     }
 
-    public synchronized void clearConversationTextBox() throws TimeoutWhatsAppWebException {
+    public void clearConversationTextBox() throws TimeoutWhatsAppWebException {
         clearTextBox(Duration.ZERO);
     }
 
-    public synchronized void clearTextBox(Duration timeout) throws TimeoutWhatsAppWebException {
+    public void clearTextBox(Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement textField = getConversationTextField(timeout);
         textField.sendKeys(Keys.CONTROL + "a");
         textField.sendKeys(Keys.DELETE);
     }
 
-    public synchronized String getTextContent() throws TimeoutWhatsAppWebException, NoSuchWhatsAppWebElementException {
+    public String getTextContent() throws TimeoutWhatsAppWebException, NoSuchWhatsAppWebElementException {
         String xPathRelativeToConversationTextField = "./p/span";
         try {
             WebElement conversationTextBox = getConversationTextField(Duration.ZERO).findElement(By.xpath(xPathRelativeToConversationTextField));
@@ -161,49 +161,50 @@ public class WhatsAppWebClient {
         }
     }
 
-    public synchronized String getConversationInfoHeaderText() throws TimeoutWhatsAppWebException {
+    public String getConversationInfoHeaderText() throws TimeoutWhatsAppWebException {
         return getConversationInfoHeaderText(Duration.ZERO);
     }
 
-    public synchronized String getConversationInfoHeaderText(Duration timeout) throws TimeoutWhatsAppWebException {
+    public String getConversationInfoHeaderText(Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement text = getConversationInfoHeader(timeout);
         return text.getText();
     }
 
-    public synchronized WebElement getConversationInfoHeader(Duration timeout) throws TimeoutWhatsAppWebException {
+    public WebElement getConversationInfoHeader(Duration timeout) throws TimeoutWhatsAppWebException {
         String xPath = "//span[@data-testid='conversation-info-header-chat-title']";
         return getElement(By.xpath(xPath), timeout);
     }
 
-    public synchronized WebElement getSendButton() throws TimeoutWhatsAppWebException {
+    public WebElement getSendButton() throws TimeoutWhatsAppWebException {
         return getSendButton(Duration.ZERO);
     }
 
-    public synchronized WebElement getSendButton(Duration timeout) throws TimeoutWhatsAppWebException {
+    public WebElement getSendButton(Duration timeout) throws TimeoutWhatsAppWebException {
         String xPath = "//button[@data-testid='compose-btn-send']";
         return getElement(By.xpath(xPath), timeout);
     }
 
     /**
      * clicks the send button with a timeout
+     *
      * @param timeout
-     * @throws TimeoutWhatsAppWebException 
+     * @throws TimeoutWhatsAppWebException
      */
-    public synchronized void send(Duration timeout) throws TimeoutWhatsAppWebException {
+    public void send(Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement sendButton = getSendButton(timeout);
         LOGGER.trace(WhatsAppHelper.getAttributesOfElement(driver, sendButton));
         sendButton.click();
     }
 
-    public synchronized void clickElement(By by) throws TimeoutWhatsAppWebException {
+    public void clickElement(By by) throws TimeoutWhatsAppWebException {
         getElement(by, Duration.ZERO).click();
     }
 
-    public synchronized void clickElement(By by, Duration timeout) throws TimeoutWhatsAppWebException {
+    public void clickElement(By by, Duration timeout) throws TimeoutWhatsAppWebException {
         getElement(by, timeout).click();
     }
 
-    public synchronized boolean isQRCodeVisible(Duration timeout) {
+    public boolean isQRCodeVisible(Duration timeout) {
         try {
             WebElement qrCode = getElement(By.xpath("//canvas[@role='img']"), timeout);
             LOGGER.trace(WhatsAppHelper.getAttributesOfElement(driver, qrCode));
@@ -214,11 +215,11 @@ public class WhatsAppWebClient {
         return false;
     }
 
-    public synchronized boolean isQRCodeVisible(long timeOutInSeconds) {
+    public boolean isQRCodeVisible(long timeOutInSeconds) {
         return isQRCodeVisible(Duration.ofSeconds(timeOutInSeconds));
     }
 
-    public synchronized boolean openChatWithUnreadNotification() {
+    public boolean openChatWithUnreadNotification() {
         try {
             WebElement span = getElement(By.xpath("//span[@data-testid='icon-unread-count']"), Duration.ZERO);
             WebElement listItem = span.findElement(By.xpath("./ancestor::div[contains(@data-testid,'list-item-')]"));
@@ -231,7 +232,7 @@ public class WhatsAppWebClient {
         return false;
     }
 
-    public synchronized List<WebElement> getSpansWithUnreadNotification() {
+    public List<WebElement> getSpansWithUnreadNotification() {
         try {
             return getElements(By.xpath("//span[@data-testid='icon-unread-count']"), Duration.ZERO);
         } catch (TimeoutWhatsAppWebException ex) {
@@ -240,16 +241,16 @@ public class WhatsAppWebClient {
         return new ArrayList<>();
     }
 
-    public synchronized WebElement getChatList(Duration timeout) throws TimeoutWhatsAppWebException {
+    public WebElement getChatList(Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement chatlist = getElement(By.xpath("//div[@data-testid='chat-list']"), timeout);
         return chatlist;
     }
 
-    public synchronized WebElement getChatList() throws TimeoutWhatsAppWebException {
+    public WebElement getChatList() throws TimeoutWhatsAppWebException {
         return getChatList(Duration.ZERO);
     }
 
-    public synchronized boolean checkAlertUpdate() {
+    public boolean checkAlertUpdate() {
         try {
             getAlertUpdate();
             return true;
@@ -259,7 +260,7 @@ public class WhatsAppWebClient {
         return false;
     }
 
-    public synchronized boolean clickAlertUpdate() {
+    public boolean clickAlertUpdate() {
         try {
             WebElement alertUpdate = getAlertUpdate();
             alertUpdate.click();
@@ -271,23 +272,23 @@ public class WhatsAppWebClient {
 
     }
 
-    public synchronized WebElement getAlertUpdate() throws TimeoutWhatsAppWebException {
+    public WebElement getAlertUpdate() throws TimeoutWhatsAppWebException {
         return getElement(By.xpath("//span[@data-testid='alert-update']"), Duration.ZERO);
     }
 
-    public synchronized WebElement getStartUpProgressBar(long timeoutInMillis) throws TimeoutWhatsAppWebException {
+    public WebElement getStartUpProgressBar(long timeoutInMillis) throws TimeoutWhatsAppWebException {
         return getElement(By.xpath("//progress[not(@dir='ltr')]"), Duration.ofMillis(timeoutInMillis));
     }
 
-    public synchronized WebElement getStartUpProgressBar(Duration timeout) throws TimeoutWhatsAppWebException {
+    public WebElement getStartUpProgressBar(Duration timeout) throws TimeoutWhatsAppWebException {
         return getElement(By.xpath("//progress[not(@dir='ltr')]"), timeout);
     }
 
-    public synchronized void waitForTimeOut(long seconds) {
+    public void waitForTimeOut(long seconds) {
         waitForTimeOut(Duration.ofSeconds(seconds));
     }
 
-    public synchronized void waitForTimeOut(Duration duration) {
+    public void waitForTimeOut(Duration duration) {
         try {
             new WebDriverWait(driver, duration).until(d -> {
                 return false;
@@ -297,19 +298,19 @@ public class WhatsAppWebClient {
         }
     }
 
-    public synchronized void waitForPageLoaded(Duration duration) throws TimeoutException {
+    public void waitForPageLoaded(Duration duration) throws TimeoutException {
         new WebDriverWait(driver, duration).until(d -> ((JavascriptExecutor) d).executeScript("return document.readyState").equals("complete"));
     }
 
-    public synchronized String getUrl() {
+    public String getUrl() {
         return driver.getCurrentUrl();
     }
 
-    public synchronized WebDriver getDriver() {
+    public WebDriver getDriver() {
         return driver;
     }
 
-    public synchronized boolean isAlertPresent() {
+    public boolean isAlertPresent() {
         boolean foundAlert = false;
         WebDriverWait wait = new WebDriverWait(driver, Duration.ZERO);
         try {
@@ -322,11 +323,11 @@ public class WhatsAppWebClient {
         return foundAlert;
     }
 
-    public synchronized WebElement getPopUp(Duration duration) throws TimeoutWhatsAppWebException {
+    public WebElement getPopUp(Duration duration) throws TimeoutWhatsAppWebException {
         return getElement(By.xpath("//div[@data-testid='confirm-popup']"), duration);
     }
 
-    public synchronized void acceptAlert() {
+    public void acceptAlert() {
         if (isAlertPresent()) {
             driver.switchTo().alert().accept();
         }

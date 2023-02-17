@@ -29,7 +29,6 @@ import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
 import de.kswmd.whatsapptool.contacts.Message;
 import de.kswmd.whatsapptool.utils.ChronoConstants;
 import de.kswmd.whatsapptool.utils.ProgressBar;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -70,13 +69,13 @@ public class WhatsAppHelper {
 
     }
 
-    public static synchronized String getAttributesOfElement(WebDriver driver, WebElement element) {
+    public static String getAttributesOfElement(WebDriver driver, WebElement element) {
         JavascriptExecutor executor = (JavascriptExecutor) driver;
         Object elementAttributes = executor.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", element);
         return elementAttributes.toString();
     }
 
-    public static synchronized List<ChatListBean> generateFromWebElement(WebElement chatList) {
+    public static List<ChatListBean> generateFromWebElement(WebElement chatList) {
         List<WebElement> listItems = chatList.findElements(By.xpath(".//div[contains(@data-testid,'list-item-')]"));
         List<ChatListBean> list = new ArrayList<>(listItems.size());
         for (WebElement listItem : listItems) {
@@ -153,21 +152,22 @@ public class WhatsAppHelper {
 
     /**
      * Used for sending messages in concurrent situations like jobs with many
-     * quartz triggers. It is a static synchronized method allowing only one
+     * quartz triggers.It is a static synchronized method allowing only one
      * thread at a time sending messages
      *
      * @param m
      * @param client
      * @throws TimeoutWhatsAppWebException
      * @throws PopUpDialogAvailableException
+     * @throws de.kswmd.whatsapptool.NotAPhoneNumberException
      */
-    public static synchronized void sendMessage(final Message m, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException {
+    public static void sendMessage(final Message m, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException, NotAPhoneNumberException {
         sendMessage(m.getEntity().getIdentifier(), m.getContent(), client);
     }
 
     /**
      * Used for sending messages in concurrent situations like jobs with many
-     * quartz triggers. It is a static synchronized method allowing only one
+     * quartz triggers.It is a static synchronized method allowing only one
      * thread at a time sending messages
      *
      * @param identifier
@@ -175,62 +175,74 @@ public class WhatsAppHelper {
      * @param client
      * @throws TimeoutWhatsAppWebException
      * @throws PopUpDialogAvailableException
+     * @throws de.kswmd.whatsapptool.NotAPhoneNumberException
      */
-    public static synchronized void sendMessage(final String identifier, final String content, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException {
+    public static synchronized void sendMessage(final String identifier, final String content, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException, NotAPhoneNumberException {
         long startTime = System.currentTimeMillis();
-        final float totalInSeconds = 40;
+        final float totalInSeconds = 22;
         final long total = 100;
         long curserPosition = Console.writeAtEnd("");
         Console.writeLine();
         ProgressBar.printProgress(startTime, total, 0, curserPosition);
         client.search(identifier, ChronoConstants.DURATION_OF_5_SECONDS);
-        ProgressBar.printProgress(startTime, total, Math.round(5 * totalInSeconds / 100), curserPosition);
+        ProgressBar.printProgress(startTime, total, Math.round(5 * total / totalInSeconds), curserPosition);
         client.waitForTimeOut(ChronoConstants.DURATION_OF_1_SECOND);
-        ProgressBar.printProgress(startTime, total, Math.round(6 * totalInSeconds / 100), curserPosition);
-        WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_1_SECOND);
-        ProgressBar.printProgress(startTime, total, Math.round(7 * totalInSeconds / 100), curserPosition);
-        Optional<ChatListBean> optionalChatListBean = WhatsAppHelper
-                .generateFromWebElement(chatList)
-                .stream()
-                .filter(cbl -> cbl.getType().equals(CONTACT))
-                .findFirst();
-        if (optionalChatListBean.isPresent()) {
-            ChatListBean clb = optionalChatListBean.get();
-            if (clb.getTitle().equals(identifier)) {
-                client.clickElement(By.xpath("//span[@dir='auto' and @title='"
-                        + clb.getTitle()
-                        + "']/ancestor::div[contains(@data-testid,'list-item')]"),
-                        ChronoConstants.DURATION_OF_1_SECOND
-                );
-            } else {
-                LOGGER.warn("Identifier "
-                        + identifier
-                        + " does not match "
-                        + clb.getTitle());
-                client.clickElement(
-                        By.xpath("//div[@data-testid='" + clb.getListItemTestId() + "']"
-                                + "[contains(@style, 'translateY(" + clb.getSort() + "px);')]"),
-                        ChronoConstants.DURATION_OF_1_SECOND
-                );
+        ProgressBar.printProgress(startTime, total, Math.round(6 * total / totalInSeconds), curserPosition);
+        boolean notInContactList;
+        try {
+            WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_1_SECOND);
+            ProgressBar.printProgress(startTime, total, Math.round(7 * total / totalInSeconds), curserPosition);
+            Optional<ChatListBean> optionalChatListBean = WhatsAppHelper
+                    .generateFromWebElement(chatList)
+                    .stream()
+                    .filter(cbl -> cbl.getType().equals(CONTACT))
+                    .findFirst();
+            notInContactList = optionalChatListBean.isEmpty();
+            if (optionalChatListBean.isPresent()) {
+                ChatListBean clb = optionalChatListBean.get();
+                if (clb.getTitle().equals(identifier)) {
+                    client.clickElement(By.xpath("//span[@dir='auto' and @title='"
+                            + clb.getTitle()
+                            + "']/ancestor::div[contains(@data-testid,'list-item')]"),
+                            ChronoConstants.DURATION_OF_1_SECOND
+                    );
+                } else {
+                    notInContactList = true;
+                }
+            }
+        } catch (TimeoutWhatsAppWebException ex) {
+            LOGGER.trace("Error", ex);
+            notInContactList = true;
+        }
+
+        if (notInContactList) {
+            if (!identifier.matches("^[+0-9]+")) {
+                throw new NotAPhoneNumberException("The identifier '" + identifier + "' was neither found in your contacts nor is it a valid phone number.");
+            }
+            client.open(identifier);
+            try {
+                ProgressBar.printProgress(startTime, total, Math.round(8 * total / totalInSeconds), curserPosition);
+                client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
+            } catch (TimeoutWhatsAppWebException ex) {
+                LOGGER.trace("No Textbox found", ex);
+                handlePossiblePopUpDialog(client);
             }
         } else {
-            client.open(identifier);
-            handlePossiblePopUpDialog(client);
+            ProgressBar.printProgress(startTime, total, Math.round(8 * total / totalInSeconds), curserPosition);
+            client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
         }
-        ProgressBar.printProgress(startTime, total, Math.round(26 * totalInSeconds / 100), curserPosition);
-        client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
-        ProgressBar.printProgress(startTime, total, Math.round(36 * totalInSeconds / 100), curserPosition);
+        ProgressBar.printProgress(startTime, total, Math.round(18 * total / totalInSeconds), curserPosition);
         client.send(ChronoConstants.DURATION_OF_3_SECONDS);
-        ProgressBar.printProgress(startTime, total, Math.round(39 * totalInSeconds / 100), curserPosition);
+        ProgressBar.printProgress(startTime, total, Math.round(21 * total / totalInSeconds), curserPosition);
         client.waitForTimeOut(ChronoConstants.DURATION_OF_500_MILLIS);
         ProgressBar.printProgress(startTime, total, total, curserPosition);
     }
 
-    private static synchronized void handlePossiblePopUpDialog(final WhatsAppWebClient client) throws PopUpDialogAvailableException {
+    private static void handlePossiblePopUpDialog(final WhatsAppWebClient client) throws PopUpDialogAvailableException {
         String content = null;
         WebElement element = null;
         try {
-            element = client.getPopUp(ChronoConstants.DURATION_OF_15_SECONDS);
+            element = client.getPopUp(ChronoConstants.DURATION_OF_2_SECONDS);
             WebElement contents = client.getElement(By.xpath("//div[@data-testid='confirm-popup']//div[@data-testid='popup-contents']"), ChronoConstants.DURATION_OF_2_SECONDS);
             WebElement button = client.getElement(By.xpath("//div[@data-testid='confirm-popup']//div[@data-testid='popup-controls-ok']"), ChronoConstants.DURATION_OF_2_SECONDS);
             button.click();

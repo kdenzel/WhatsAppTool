@@ -24,11 +24,14 @@
 package de.kswmd.whatsapptool.text;
 
 import de.kswmd.whatsapptool.MiscConstants;
+import de.kswmd.whatsapptool.contacts.Entity;
+import de.kswmd.whatsapptool.contacts.Message;
 import de.kswmd.whatsapptool.utils.PathResolver;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
@@ -43,8 +46,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class MessageParserTest {
 
+    private static final Logger LOGGER;
+    
     static {
         System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
+        LOGGER = LogManager.getLogger();
     }
     
     public MessageParserTest() {
@@ -75,11 +81,17 @@ public class MessageParserTest {
             Configurator.setLevel("de.kswmd.whatsapptool", Level.TRACE);
             String text = Files.readString(Path.of("./logs/test.txt"));
             MessageParser instance = MessageParser.DEFAULT_PARSER;
-            String expResult = "";
-            String result = instance.format(text);
+            Entity e = new Entity();
+            e.setIdentifier("Kai Denzel");
+            Message m = new Message();
+            m.setEntity(e);
+            m.setCronExpression("0 * * ? * * *");
+            m.setContent(text);
+            String result = instance.format(m);
             System.out.println(result);
-        } catch (IOException ex) {
-            assertTrue(false, ex.getMessage());
+        } catch (Exception ex) {
+            LOGGER.error("error",ex);
+            assertTrue(false);
         }
 
     }

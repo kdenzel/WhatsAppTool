@@ -103,7 +103,7 @@ public class MaintenanceJob implements Job {
                 LOGGER.info("Start sending status report.");
                 WhatsAppHelper.sendMessage(adminPhoneNumber,sb.toString(), client);
                 LOGGER.info("Successfully sent status report.");
-            } catch (TimeoutWhatsAppWebException | PopUpDialogAvailableException ex) {
+            } catch (Exception ex) {
                 LOGGER.error("Job execution failed... \n" + adminPhoneNumber + "\n", ex);
             }
         }

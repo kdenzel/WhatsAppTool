@@ -23,14 +23,13 @@
  */
 package de.kswmd.whatsapptool.quartz;
 
-import de.kswmd.whatsapptool.PopUpDialogAvailableException;
-import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
 import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.WhatsAppHelper;
 import de.kswmd.whatsapptool.contacts.Message;
+import de.kswmd.whatsapptool.text.MessageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.Keys;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -52,12 +51,15 @@ public class HandleCronMessageJob implements Job {
     public void execute(JobExecutionContext jec) throws JobExecutionException {
         Message m = (Message) jec.getTrigger().getJobDataMap().get(KEY_MESSAGE);
         WhatsAppWebClient client = (WhatsAppWebClient) jec.getJobDetail().getJobDataMap().get(KEY_WHATSAPP_CLIENT);
+        long ts = System.currentTimeMillis();
         try {
             LOGGER.info("Start sending message to " + m.getEntity().getIdentifier() + ": " + m.getContent());
+            //TODO: Find a solution for linebreaks.
+            m.setContent(MessageParser.DEFAULT_PARSER.format(m).replaceAll("\n", Keys.chord(Keys.SHIFT,Keys.ENTER)));
             WhatsAppHelper.sendMessage(m, client);
-            LOGGER.info("Successfully sent message. " + m);
+            LOGGER.info("Successfully sent message. " + (System.currentTimeMillis() - ts) + "ms:\n" + m);
         } catch (Exception ex) {
-            LOGGER.error("Job execution failed... \n" + m + "\n", ex);
+            LOGGER.error("Job execution failed. " + (System.currentTimeMillis() - ts) + "ms:\n" + m + "\n", ex);
         }
     }
 

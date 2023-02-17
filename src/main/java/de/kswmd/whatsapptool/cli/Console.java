@@ -28,7 +28,6 @@ import de.kswmd.whatsapptool.utils.FormatterConstants;
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -109,19 +108,19 @@ public final class Console extends AbstractAppender {
         }
     }
 
-    private synchronized void w(Object o) {
+    private void w(Object o) {
         w("", "", o, "");
     }
 
-    private synchronized void w(String specialCodeBefore, Object o) {
+    private void w(String specialCodeBefore, Object o) {
         w("", specialCodeBefore, o, "");
     }
 
-    private synchronized void w(String specialCodeBefore, Object o, String specialCodeAfter) {
+    private void w(String specialCodeBefore, Object o, String specialCodeAfter) {
         w("", specialCodeBefore, o, specialCodeAfter);
     }
 
-    private synchronized void w(String cursorMovement, String specialCodeBefore, Object o, String specialCodeAfter) {
+    private void w(String cursorMovement, String specialCodeBefore, Object o, String specialCodeAfter) {
         String s = String.valueOf(o);
         String output = s;
         if (showLines) {
@@ -164,7 +163,7 @@ public final class Console extends AbstractAppender {
         writeRaw(cursorMovement + specialCodeBefore + output + specialCodeAfter);
     }
 
-    private synchronized void writeRaw(Object o) {
+    private void writeRaw(Object o) {
         System.out.print(o);
     }
 
@@ -315,7 +314,7 @@ public final class Console extends AbstractAppender {
      *
      * @return
      */
-    public static synchronized long getCursorPosition() {
+    public static long getCursorPosition() {
         return instance.cursorPosition;
     }
 
@@ -340,7 +339,7 @@ public final class Console extends AbstractAppender {
      *
      * @param commands
      */
-    public static synchronized void initLineReader(String[] commands) {
+    public static void initLineReader(String[] commands) {
         StringsCompleter completer = new StringsCompleter(commands);
         instance.lineReader = LineReaderBuilder.builder()
                 .terminal(instance.terminal)
@@ -355,7 +354,7 @@ public final class Console extends AbstractAppender {
     /**
      * Clears the terminal.
      */
-    public static synchronized void clear() {
+    public static void clear() {
         instance.terminal.puts(Capability.clear_screen);
         //terminal.flush();
     }
@@ -366,7 +365,7 @@ public final class Console extends AbstractAppender {
      *
      * @param count number of lines to be moved up
      */
-    private synchronized void moveCursorUpAndWrite(int count) {
+    private void moveCursorUpAndWrite(int count) {
         moveCursorUpAndWrite(count, "", "", "");
     }
 
@@ -378,7 +377,7 @@ public final class Console extends AbstractAppender {
      * @param append the object to be written
      * @param specialCodeAfter special code after
      */
-    private synchronized void moveCursorUpAndWrite(int count, String specialCodeBefore, Object append, String specialCodeAfter) {
+    private void moveCursorUpAndWrite(int count, String specialCodeBefore, Object append, String specialCodeAfter) {
         setCursorPosition((cursorPosition - count));
         String moveUpString = count > 0 ? getMoveCursorUpString(count) : "";
         write(moveUpString, specialCodeBefore, append, specialCodeAfter);
@@ -390,7 +389,7 @@ public final class Console extends AbstractAppender {
      *
      * @param count number of lines to be moved down
      */
-    private synchronized void moveCursorDownAndWrite(int count) {
+    private void moveCursorDownAndWrite(int count) {
         moveCursorDownAndWrite(count, "");
     }
 
@@ -401,7 +400,7 @@ public final class Console extends AbstractAppender {
      * @param count number of lines to be moved down
      * @param append the object to be written
      */
-    private synchronized void moveCursorDownAndWrite(int count, Object append) {
+    private void moveCursorDownAndWrite(int count, Object append) {
         moveCursorDownAndWrite(count, "", append, "");
     }
 
@@ -414,7 +413,7 @@ public final class Console extends AbstractAppender {
      * @param append the object to be written
      * @param specialCodeAfter specialCode after
      */
-    private synchronized void moveCursorDownAndWrite(int count, String specialCodeBefore, Object append, String specialCodeAfter) {
+    private void moveCursorDownAndWrite(int count, String specialCodeBefore, Object append, String specialCodeAfter) {
         setCursorPosition((cursorPosition + count));
         String moveDown = count > 0 ? getMoveCursorDownString(count) : "";
         write(moveDown, specialCodeBefore, append, specialCodeAfter);
@@ -423,14 +422,14 @@ public final class Console extends AbstractAppender {
     /**
      * Erases the current line.
      */
-    private static synchronized void clearCurrentLine() {
+    private static void clearCurrentLine() {
         instance.write(getEraseLineString(), "");
     }
 
     /**
      * Sets the cursor down and also adjusts the cursorPosition.
      */
-    private synchronized long setCursorDown() {
+    private long setCursorDown() {
         return setCursorDownAndWrite("");
     }
 
@@ -441,7 +440,7 @@ public final class Console extends AbstractAppender {
      * @param append
      * @return
      */
-    private synchronized long setCursorDownAndWriteLine(Object append) {
+    private long setCursorDownAndWriteLine(Object append) {
         return setCursorDownAndWrite(String.valueOf(append) + String.valueOf(LINE_BREAK));
     }
 
@@ -452,7 +451,7 @@ public final class Console extends AbstractAppender {
      * @param append
      * @return the new cursorPosition
      */
-    private synchronized long setCursorDownAndWrite(Object append) {
+    private long setCursorDownAndWrite(Object append) {
         return setCursorDownAndWrite("", append, "");
     }
 
@@ -465,7 +464,7 @@ public final class Console extends AbstractAppender {
      * @param specialCodeAfter
      * @return
      */
-    private synchronized long setCursorDownAndWriteLine(String specialCodeBefore, Object append, String specialCodeAfter) {
+    private long setCursorDownAndWriteLine(String specialCodeBefore, Object append, String specialCodeAfter) {
         return setCursorDownAndWrite(specialCodeBefore, String.valueOf(append) + String.valueOf(LINE_BREAK), specialCodeAfter);
     }
 
@@ -478,7 +477,7 @@ public final class Console extends AbstractAppender {
      * @param specialCodeAfter
      * @return the new cursorPosition
      */
-    private synchronized long setCursorDownAndWrite(String specialCodeBefore, Object append, String specialCodeAfter) {
+    private long setCursorDownAndWrite(String specialCodeBefore, Object append, String specialCodeAfter) {
         int offset = (int) (lineNumber - cursorPosition);
         moveCursorDownAndWrite(offset, specialCodeBefore, append, specialCodeAfter);
         return cursorPosition;
@@ -489,7 +488,7 @@ public final class Console extends AbstractAppender {
      *
      * @param position
      */
-    private synchronized void setCursorPosition(long position) {
+    private void setCursorPosition(long position) {
         this.cursorPosition = position;
     }
 
@@ -499,7 +498,7 @@ public final class Console extends AbstractAppender {
      * @param count amount of lines to move up
      * @return
      */
-    public static synchronized String getMoveCursorUpString(int count) {
+    public static String getMoveCursorUpString(int count) {
         return ESCAPE_CHAR + "[" + count + "A";
     }
 
@@ -510,7 +509,7 @@ public final class Console extends AbstractAppender {
      * @param count amount of lines to move down
      * @return
      */
-    public static synchronized String getMoveCursorDownString(int count) {
+    public static String getMoveCursorDownString(int count) {
         return ESCAPE_CHAR + "[" + count + "B";
     }
 
@@ -520,7 +519,7 @@ public final class Console extends AbstractAppender {
      *
      * @return
      */
-    public static synchronized String getEraseLineString() {
+    public static String getEraseLineString() {
         return "\33[2K";
     }
 
@@ -529,7 +528,7 @@ public final class Console extends AbstractAppender {
      *
      * @param lines
      */
-    private synchronized void addToLineNumber(int lines) {
+    private void addToLineNumber(int lines) {
         lineNumber = lineNumber + lines;
     }
 
@@ -538,7 +537,7 @@ public final class Console extends AbstractAppender {
      *
      * @param lines
      */
-    private synchronized void addToCurserPositionNumber(int lines) {
+    private void addToCurserPositionNumber(int lines) {
         cursorPosition = cursorPosition + lines;
     }
 

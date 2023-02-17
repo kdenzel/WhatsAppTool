@@ -67,7 +67,7 @@ public final class Settings {
         printProperties();
     }
 
-    public static final synchronized Settings getInstance() {
+    public static final Settings getInstance() {
         if (instance == null) {
             instance = new Settings();
         }
@@ -91,19 +91,19 @@ public final class Settings {
         properties.forEach((key, value) -> LOGGER.info("Key : " + key + ", Value : " + value));
     }
 
-    public synchronized String getProfilePathChrome() {
+    public String getProfilePathChrome() {
         return properties.getProperty(KEY_PROFILE_PATH_CHROME);
     }
 
-    public synchronized String getProfilePathFirefox() {
+    public String getProfilePathFirefox() {
         return properties.getProperty(KEY_PROFILE_PATH_CHROME);
     }
 
-    public synchronized String getNotificationsXMLFile() {
+    public String getNotificationsXMLFile() {
         return properties.getProperty(KEY_NOTIFICATION_FILE);
     }
 
-    public synchronized String getAdminPhoneNumber() {
+    public String getAdminPhoneNumber() {
         return properties.getProperty(KEY_ADMIN_PHONE);
     }
 
@@ -111,7 +111,7 @@ public final class Settings {
         return properties.isEmpty();
     }
 
-    public synchronized void save() {
+    public void save() {
         new File(configFilePath).mkdirs();
         try {
             new File(configFilePathWithName).createNewFile();

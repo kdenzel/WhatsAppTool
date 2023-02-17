@@ -93,12 +93,10 @@ public class FileMessageDatabaseTest {
     public void testValidateXMLSchema() {
         Settings settings = Settings.getInstance();
         String xmlPath = settings.getNotificationsXMLFile();
-        boolean expResult = true;
         try {
             fileMessageDatabase.validateXMLSchema(xmlPath);
-        } catch (SAXException ex) {
-            assertTrue(false);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
+            LOGGER.error("", ex);
             assertTrue(false);
         }
         assertTrue(true);

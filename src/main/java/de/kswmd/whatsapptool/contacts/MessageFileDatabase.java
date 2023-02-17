@@ -78,7 +78,7 @@ public final class MessageFileDatabase implements MessageDatabase {
         return new MessageFileDatabase(filePath);
     }
 
-    public synchronized boolean createExampleFile(String pathToFolder) {
+    public boolean createExampleFile(String pathToFolder) {
         URL inputUrl = getClass().getResource("/" + EXAMPLE_NAME);
         File dest = new File(pathToFolder + "/" + EXAMPLE_NAME);
         try {
@@ -89,7 +89,7 @@ public final class MessageFileDatabase implements MessageDatabase {
         return false;
     }
 
-    public synchronized void validateXMLSchema(File f) throws SAXException, IOException {
+    public void validateXMLSchema(File f) throws SAXException, IOException {
         SchemaFactory factory
                 = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = factory.newSchema(getClass().getResource("/notifications.xsd"));
@@ -98,7 +98,7 @@ public final class MessageFileDatabase implements MessageDatabase {
 
     }
 
-    public synchronized void validateXMLSchema(String xmlPath) throws SAXException, IOException {
+    public void validateXMLSchema(String xmlPath) throws SAXException, IOException {
         validateXMLSchema(new File(xmlPath));
     }
 

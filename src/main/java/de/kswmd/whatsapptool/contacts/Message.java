@@ -36,7 +36,6 @@ public final class Message {
      * Can be a Name (For example a group name) or Phonenumber.
      */
     private CronExpression cronExpression;
-    private String cronExpressionString;
     private String content;
     private Entity entity;
 
@@ -53,12 +52,11 @@ public final class Message {
     }
 
     public String getCronExpressionString() {
-        return cronExpressionString;
+        return this.cronExpression.getCronExpression();
     }
 
     public void setCronExpression(String cronExpression) throws ParseException {
         this.cronExpression = new CronExpression(cronExpression);
-        this.cronExpressionString = cronExpression;
     }
 
     public String getContent() {

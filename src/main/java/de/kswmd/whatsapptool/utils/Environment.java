@@ -37,7 +37,7 @@ public final class Environment {
 
     private static Environment instance;
 
-    public static synchronized Environment getInstance() {
+    public static Environment getInstance() {
         if (instance == null) {
             instance = new Environment();
         }
@@ -52,11 +52,11 @@ public final class Environment {
         }
     }
 
-    public synchronized String getProperty(String key) {
+    public String getProperty(String key) {
         return properties.getProperty(key);
     }
 
-    public synchronized Properties getProperties() {
+    public Properties getProperties() {
         return properties;
     }
 

@@ -57,11 +57,11 @@ public final class WebDriverFactory {
         this.browser = browser;
     }
 
-    public synchronized WebDriver createWebDriver() {
+    public WebDriver createWebDriver() {
         return createWebDriver(browser);
     }
 
-    public synchronized WebDriver createWebDriver(Browser browser) {
+    public WebDriver createWebDriver(Browser browser) {
         WebDriver webDriver;
         switch (browser) {
             case FIREFOX:
@@ -72,9 +72,13 @@ public final class WebDriverFactory {
             case CHROME:
                 LOGGER.info("Installing driver for chrome browser.");
                 WebDriverManager.chromedriver().setup();
+                webDriver = createChromeWebDriver();
+                break;
             case CHROMIUM:
                 LOGGER.info("Installing driver for chromium browser.");
                 WebDriverManager.chromiumdriver().setup();
+                webDriver = createChromeWebDriver();
+                break;
             default:
                 webDriver = createChromeWebDriver();
                 break;
@@ -83,7 +87,7 @@ public final class WebDriverFactory {
         return webDriver;
     }
 
-    private synchronized WebDriver createChromeWebDriver() {
+    private WebDriver createChromeWebDriver() {
         Settings settings = Settings.getInstance();
         String userDataDir = settings.getProfilePathChrome();
         ChromeOptions options = new ChromeOptions();
@@ -98,7 +102,7 @@ public final class WebDriverFactory {
         return driver;
     }
 
-    private synchronized WebDriver createFirefoxWebDriver() {
+    private WebDriver createFirefoxWebDriver() {
         Settings settings = Settings.getInstance();
         String userDataDir = settings.getProfilePathFirefox();
         LOGGER.debug("user-data-dir=" + userDataDir);
