@@ -24,6 +24,7 @@
 package de.kswmd.whatsapptool.text;
 
 import de.kswmd.whatsapptool.MiscConstants;
+import de.kswmd.whatsapptool.WhatsAppHelper;
 import de.kswmd.whatsapptool.contacts.Entity;
 import de.kswmd.whatsapptool.contacts.Message;
 import de.kswmd.whatsapptool.utils.PathResolver;
@@ -79,7 +80,8 @@ public class MessageParserTest {
     public void testFormat() {
         try {
             Configurator.setLevel("de.kswmd.whatsapptool", Level.TRACE);
-            String text = Files.readString(Path.of("./logs/test.txt"));
+            String fileText = Files.readString(Path.of("./logs/2023-02/app-02-17-2023.log.txt"));
+            String text = fileText.substring(0, 1000);
             MessageParser instance = MessageParser.DEFAULT_PARSER;
             Entity e = new Entity();
             e.setIdentifier("Kai Denzel");
@@ -94,6 +96,11 @@ public class MessageParserTest {
             assertTrue(false);
         }
 
+    }
+    
+    @Test
+    public void testKeys(){
+        assertEquals(2,WhatsAppHelper.SHIFT_ENTER.length());
     }
 
 }

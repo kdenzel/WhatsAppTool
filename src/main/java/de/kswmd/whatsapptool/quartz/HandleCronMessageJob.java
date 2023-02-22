@@ -29,7 +29,6 @@ import de.kswmd.whatsapptool.contacts.Message;
 import de.kswmd.whatsapptool.text.MessageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.Keys;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -54,9 +53,8 @@ public class HandleCronMessageJob implements Job {
         long ts = System.currentTimeMillis();
         try {
             LOGGER.info("Start sending message to " + m.getEntity().getIdentifier() + ": " + m.getContent());
-            //TODO: Find a solution for linebreaks.
-            m.setContent(MessageParser.DEFAULT_PARSER.format(m).replaceAll("\n", Keys.chord(Keys.SHIFT,Keys.ENTER)));
-            WhatsAppHelper.sendMessage(m, client);
+            String content = MessageParser.DEFAULT_PARSER.format(m).replaceAll("\n", WhatsAppHelper.SHIFT_ENTER);
+            WhatsAppHelper.sendMessage(m.getEntity().getIdentifier(), content, client);
             LOGGER.info("Successfully sent message. " + (System.currentTimeMillis() - ts) + "ms:\n" + m);
         } catch (Exception ex) {
             LOGGER.error("Job execution failed. " + (System.currentTimeMillis() - ts) + "ms:\n" + m + "\n", ex);

@@ -13,6 +13,7 @@
         <RollingFile name="RollingFile" fileName="${sys:logFilePath}/log.txt"
                      filePattern="${sys:logFilePath}/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}.log.txt">
             <PatternLayout>
+                <charset>UTF-8</charset>
                 <Pattern>${LOG_PATTERN}</Pattern>
             </PatternLayout>
             <Policies>
@@ -20,9 +21,10 @@
                 <!--<SizeBasedTriggeringPolicy size="250 MB"/>-->
             </Policies>
         </RollingFile>
-        <RollingFile name="HandleCronMessageJob" fileName="${sys:logFilePath}/message-job-error-log.txt"
-                     filePattern="${sys:logFilePath}/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}.message-job-error-log.txt">
+        <RollingFile name="HandleCronMessageJob" fileName="${sys:logFilePath}/message-job-status-log.txt"
+                     filePattern="${sys:logFilePath}/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}.message-job-status-log.txt">
             <PatternLayout>
+                <charset>UTF-8</charset>
                 <Pattern>${LOG_PATTERN}</Pattern>
             </PatternLayout>
             <Policies>

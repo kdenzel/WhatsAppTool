@@ -23,8 +23,14 @@
  */
 package de.kswmd.whatsapptool.text;
 
+import static de.kswmd.whatsapptool.WhatsAppHelper.EMOJI_END_SEQUENCE;
+import static de.kswmd.whatsapptool.WhatsAppHelper.EMOJI_START_SEQUENCE;
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
 import de.kswmd.whatsapptool.contacts.Message;
+import de.kswmd.whatsapptool.utils.PathResolver;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -45,32 +51,32 @@ import org.apache.logging.log4j.Logger;
  */
 public class MessageParser {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public enum KeyWord {
         DATE,
         TIME,
         EMOJI,
         IDENTIFIER,
-        CRONEXPRESSION;
+        CRONEXPRESSION,
+        FILE,
+        ATTACH;
     }
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Pattern parsingPattern;
     private final Pattern matchBlocksInsideQuotesPattern;
     private final Pattern matchEscapedQuotesPattern;
     private final Map<KeyWord, Object> keywords = new HashMap<>();
-    private final Map<String, String> placeholders = new LinkedHashMap<>();
 
     public static final MessageParser DEFAULT_PARSER = new MessageParser("\\[((\\w+):(.+?)|(\\w+))\\]");
 
     private MessageParser(final String regex) {
         this.parsingPattern = Pattern.compile(regex, Pattern.MULTILINE);
         this.matchBlocksInsideQuotesPattern = Pattern.compile("\\\"(.*?)\\\"", Pattern.MULTILINE | Pattern.DOTALL);
-        this.matchEscapedQuotesPattern = Pattern.compile("\\\\(\")", Pattern.MULTILINE);
+        this.matchEscapedQuotesPattern = Pattern.compile("\\\\(.)", Pattern.MULTILINE | Pattern.DOTALL);
 
     }
 
-    private String replaceSpecialCharactersWithPlaceHolders(String origText, Pattern pattern) {
+    private String replaceSpecialCharactersWithPlaceHolders(final String origText, final Pattern pattern, final Map<String, String> placeholders) {
         Matcher matcher = pattern.matcher(origText);
         StringBuilder newText = new StringBuilder(origText.length());
         int i = 0;
@@ -85,11 +91,13 @@ public class MessageParser {
         newText.append(origText.substring(i, origText.length()));
         return newText.toString();
     }
-    
-    public String format(Message m){
+
+    public String format(Message m) {
         keywords.put(KeyWord.IDENTIFIER, m.getEntity().getIdentifier());
         keywords.put(KeyWord.CRONEXPRESSION, m.getCronExpressionString());
-        return format(m.getContent());
+        String result = format(m.getContent());
+        keywords.clear();
+        return result;
     }
 
     /**
@@ -98,9 +106,10 @@ public class MessageParser {
      * @param origText
      * @return
      */
-    public String format(String origText) {
-        String newText = replaceSpecialCharactersWithPlaceHolders(origText, matchEscapedQuotesPattern);
-        newText = replaceSpecialCharactersWithPlaceHolders(newText, matchBlocksInsideQuotesPattern);
+    public String format(final String origText) {
+        final Map<String, String> placeholders = new LinkedHashMap<>();
+        String newText = replaceSpecialCharactersWithPlaceHolders(origText, matchEscapedQuotesPattern, placeholders);
+        newText = replaceSpecialCharactersWithPlaceHolders(newText, matchBlocksInsideQuotesPattern, placeholders);
         StringBuilder builder = new StringBuilder(newText.length());
         LocalDateTime now = LocalDateTime.now();
         keywords.put(KeyWord.DATE, now);
@@ -137,14 +146,56 @@ public class MessageParser {
                         replacement = date.format(dtf);
                         break;
                     case EMOJI:
-                        Emoji emoji = Emoji.valueOf(itemAttach.toUpperCase());
-                        replacement = emoji.getSequence();
+                        if (itemAttach != null) {
+                            try {
+                                Emoji emoji = Emoji.valueOf(itemAttach.toUpperCase());
+                                replacement = EMOJI_START_SEQUENCE + emoji.toString() + EMOJI_END_SEQUENCE;
+                            } catch (IllegalArgumentException ex) {
+                                LOGGER.debug("No emoji found with value " + itemAttach, ex);
+                            }
+                        }
                         break;
                     case IDENTIFIER:
                         replacement = keywords.get(kw);
                         break;
                     case CRONEXPRESSION:
                         replacement = keywords.get(kw);
+                        break;
+                    case FILE:
+                        if (itemAttach != null) {
+                            try {
+                                Path p;
+                                if (!itemAttach.startsWith("/")) {
+                                    Path root = PathResolver.getJarFilePathOrWorkingDirectory();
+                                    p = Paths.get(root.toString(), itemAttach);
+                                } else {
+                                    p = Path.of(itemAttach);
+                                }
+                                LOGGER.debug(p.toAbsolutePath());
+                                String fileText = Files.readString(p);
+                                replacement = fileText;
+                            } catch (Exception ex) {
+                                LOGGER.debug("Problem with file " + itemAttach, ex);
+                            }
+                        }
+                        break;
+                    case ATTACH:
+                        if (itemAttach != null) {
+                            try {
+                                Path p;
+                                if (!itemAttach.startsWith("/")) {
+                                    Path root = PathResolver.getJarFilePathOrWorkingDirectory();
+                                    p = Paths.get(root.toString(), itemAttach);
+                                } else {
+                                    p = Path.of(itemAttach);
+                                }
+                                LOGGER.debug(p.toAbsolutePath());
+                                String fileText = Files.readString(p);
+                                replacement = format(fileText);
+                            } catch (Exception ex) {
+                                LOGGER.debug("Problem with attached file " + itemAttach, ex);
+                            }
+                        }
                         break;
                 }
             } catch (Exception ex) {
@@ -160,7 +211,7 @@ public class MessageParser {
         }
 
         builder.append(newText.substring(i, newText.length()));
-        Entry[] entries = this.placeholders.entrySet().toArray(Entry[]::new);
+        Entry[] entries = placeholders.entrySet().toArray(Entry[]::new);
         for (i = entries.length - 1; i >= 0; i--) {
             Entry e = entries[i];
             String key = String.valueOf(e.getKey());
@@ -168,7 +219,6 @@ public class MessageParser {
             int startIndex = builder.indexOf(key);
             builder.replace(startIndex, startIndex + key.length(), value);
         }
-        keywords.clear();
         return builder.toString();
     }
 

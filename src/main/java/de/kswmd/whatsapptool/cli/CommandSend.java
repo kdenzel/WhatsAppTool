@@ -25,6 +25,7 @@ package de.kswmd.whatsapptool.cli;
 
 import de.kswmd.whatsapptool.NoSuchWhatsAppWebElementException;
 import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
+import de.kswmd.whatsapptool.WhatsAppHelper;
 import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.utils.ChronoConstants;
 import de.kswmd.whatsapptool.utils.ProgressBar;
@@ -34,7 +35,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.Keys;
 
 /**
  *
@@ -61,7 +61,7 @@ public class CommandSend extends Command {
                     String text = client.getTextContent();
                     LocalDateTime now = LocalDateTime.now();
                     String date = now.format(formatter);
-                    client.setText(date + Keys.chord(Keys.SHIFT, Keys.ENTER) + text);
+                    client.setText(date + WhatsAppHelper.SHIFT_ENTER + text);
                 } catch (TimeoutWhatsAppWebException | NoSuchWhatsAppWebElementException ex) {
                     LOGGER.warn("Something went wrong in setting the timestamp for the message. " + ex.getMessage());
                     LOGGER.debug("Error...",ex);

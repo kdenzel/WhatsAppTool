@@ -23,11 +23,18 @@
  */
 package de.kswmd.whatsapptool;
 
+import static de.kswmd.whatsapptool.WhatsAppHelper.EMOJI_END_SEQUENCE;
+import static de.kswmd.whatsapptool.WhatsAppHelper.EMOJI_START_SEQUENCE;
+import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
+import de.kswmd.whatsapptool.cli.Console;
+import de.kswmd.whatsapptool.utils.ProgressBar;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -51,6 +58,17 @@ public class WhatsAppWebClient {
     public static final String WHATSAPP_WEB_URI = "web.whatsapp.com";
 
     private final WebDriver driver;
+
+    /**
+     * The secret pattern to filter out emojis from the message. Should be
+     * impossible to guess by the user so the user has to go the way with the
+     * message parser.
+     */
+    private final Pattern emojiPattern = Pattern.compile(EMOJI_START_SEQUENCE + "([A-Z_]+?)" + EMOJI_END_SEQUENCE);
+    /**
+     * Looks if the String ends with a word character.
+     */
+    private final Pattern stringEndingPattern = Pattern.compile(".*[\\w]$", Pattern.DOTALL);
 
     public WhatsAppWebClient(WebDriver driver) {
         this.driver = driver;
@@ -105,9 +123,102 @@ public class WhatsAppWebClient {
         return getElement(By.xpath(xPath), timeout);
     }
 
+    /**
+     * This method is used for appending Text to the conversation text box if
+     * shown. It also filters the Text for inserted Emojis performed by the
+     * MessageParser class.
+     *
+     * @param text
+     * @param timeout
+     * @throws TimeoutWhatsAppWebException
+     */
     public void appendText(String text, Duration timeout) throws TimeoutWhatsAppWebException {
         WebElement textField = getConversationTextField(timeout);
-        textField.sendKeys(text);
+        //Replace every Tab because Tab will lose the focus for the textbox.
+        text = text.replaceAll("\t", "");
+        final long curserPosition = Console.writeLine("Start appending Text.");
+        final long startTime = System.currentTimeMillis();
+        final int total = text.length();
+        int progress = 0;
+        //##########start ugly hack for sending emojis###########################
+        int index = 0;
+        Matcher matcher = emojiPattern.matcher(text);
+        while (matcher.find()) {
+            int start = matcher.start();
+            //Get the String before the next emoji
+            String sub = text.substring(index, start);
+            //Send them in junks
+            sendInJunks(sub, textField, startTime, curserPosition, total, progress);
+            //If the string ends with a word character, we have to insert a space.
+            if (stringEndingPattern.matcher(sub).matches()) {
+                textField.sendKeys(Keys.SPACE);
+            }
+            //Get the emoji
+            String emojiValue = matcher.group(1);
+            try {
+                //Load the emoji
+                Emoji emoji = Emoji.valueOf(emojiValue);
+                //Calculate the free space from the chatbox
+                int textFieldSize = textField.getText().length();
+                int freeSpaceInCurrentBlock = WhatsAppHelper.MAX_TEXTBOX_CHAR_SIZE - textFieldSize;
+                //if there isn't enough space for the emoji sequence press enter
+                if (freeSpaceInCurrentBlock < emoji.getSequence().length()) {
+                    textField.sendKeys(Keys.ENTER);
+                }
+                //print the emoji sequence
+                textField.sendKeys(emoji.getSequence());
+                long ts = System.currentTimeMillis() + 50;
+                //Wait some time before sending Enter after the emoji sequence was printed.
+                //It is necessary for the popup in the frontend.
+                while (ts > System.currentTimeMillis());
+                //press enter
+                textField.sendKeys(Keys.ENTER);
+            } catch (IllegalArgumentException ex) {
+                LOGGER.fatal("How is this even possible?"
+                        + " This should never be shown to the user because the match sequence is unknown."
+                        + " Invalid emoji " + emojiValue, ex);
+                textField.sendKeys(ex.getMessage());
+            }
+            index = matcher.end();
+            progress = index;
+        }
+        //##########end ugly hack for sending emojis###########################
+        //Send the rest of the string or if no emoji available send the text.
+        sendInJunks(text.substring(index, text.length()),
+                textField, startTime, curserPosition, total, progress);
+        Console.writeLine("");
+    }
+
+    /**
+     * Method for buffering the text to the chatbox and sends the buffer when
+     * the textbox reaches its limit.
+     *
+     * @param text
+     * @param textField
+     * @param startTime
+     * @param curserPosition
+     * @param total
+     * @param progress
+     */
+    private void sendInJunks(String text, WebElement textField, long startTime, long curserPosition, int total, int progress) {
+        final int junkBufferSize = 1024;
+        int index = 0;
+        while (index < text.length()) {
+            int textFieldSize = textField.getText().length();
+            int freeSpaceInCurrentBlock = WhatsAppHelper.MAX_TEXTBOX_CHAR_SIZE - textFieldSize;
+            int maxJunkSize = Math.min(freeSpaceInCurrentBlock, junkBufferSize);
+            int endIndex = Math.min(index + maxJunkSize, text.length());
+            String junk = text.substring(index, endIndex);
+            int junkLength = junk.length();
+            index = index + junkLength;
+            if (freeSpaceInCurrentBlock == 0) {
+                textField.sendKeys(Keys.ENTER);
+            }
+            textField.sendKeys(junk);
+            progress += junkLength;
+            ProgressBar.printProgress(startTime, total, progress, curserPosition);
+        }
+
     }
 
     public void appendText(String text) throws TimeoutWhatsAppWebException {
@@ -122,7 +233,7 @@ public class WhatsAppWebClient {
         WebElement textField = getConversationTextField(timeout);
         textField.sendKeys(Keys.CONTROL + "a");
         textField.sendKeys(Keys.DELETE);
-        textField.sendKeys(text);
+        appendText(text);
     }
 
     public void search(String text) throws TimeoutWhatsAppWebException {

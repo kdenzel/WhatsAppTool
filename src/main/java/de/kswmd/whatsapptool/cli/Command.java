@@ -52,6 +52,7 @@ public abstract class Command implements Comparable<Command> {
     public static final String COMMAND_RELOAD_NOTIFICATIONS_JOB = "reload_notification_jobs";
     public static final String COMMAND_SEARCH_CONTACTS = "search";
     public static final String COMMAND_PRINT_DOM = "print_dom";
+    public static final String COMMAND_SEND_MESSAGE = "send_message";
 
     private final String command;
     private final String description;

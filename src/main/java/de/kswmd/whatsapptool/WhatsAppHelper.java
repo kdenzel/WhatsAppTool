@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
@@ -50,13 +51,61 @@ public class WhatsAppHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    /**
+     * Shift enter sequence if you want to put a new line to the chatbox inside
+     * the same message block.
+     */
+    public final static String SHIFT_ENTER = Keys.chord(Keys.SHIFT, Keys.ENTER);
+    /**
+     * The emoji start sequence that is secret and will be used by the message
+     * parser for replacing emojis found in the text and the whatsapp client has
+     * to filter also for sending emojis because it depends on the popup dialog
+     * in the whatsapp web frontend.
+     *
+     * See de.kswmd.whatsapptool.WhatsAppWebClient the appendText method for the
+     * ugly emoji hack is used for.
+     */
+    public static final String EMOJI_START_SEQUENCE = UUID.randomUUID().toString();//"读写汉字";
+    /**
+     * The emoji end sequence that is secret and will be used by the message
+     * parser for replacing emojis found in the text and the whatsapp client has
+     * to filter also for sending emojis because it depends on the popup dialog
+     * in the whatsapp web frontend.
+     *
+     * See de.kswmd.whatsapptool.WhatsAppWebClient the appendText method for the
+     * ugly emoji hack is used for.
+     */
+    public static final String EMOJI_END_SEQUENCE = UUID.randomUUID().toString();//"读写汉字";
+
+    /**
+     * Max charcters for the textbox to be appended.
+     */
+    public static final int MAX_TEXTBOX_CHAR_SIZE = 65536;
+
+    /**
+     * Because the chromedriver only supports BMP Characters this is a solution
+     * to send emojis to the whatsapp web frontend. It requires a char sequence
+     * to select the specific emoji except for the enter. The enter key has to
+     * be performed by the WhatsAppWebClient class itself in the appendText
+     * Method. This is the reason for filtering emojis before being sent so the
+     * popup dialog can appear.
+     */
     public enum Emoji {
-        MIDDLE_FINGER(":middle" + Keys.ENTER),
-        GRINNING_FACE(":grinning face with " + Keys.ENTER);
+        ROFL(Keys.chord(":floor")),
+        FACE_WITH_TEARS_OF_JOY(Keys.chord(":face with tears of joy")),
+        CRAZY_FACE(Keys.chord(":crazy face")),
+        SMILING_FACE_WITH_OPEN_MOUTH_AND_SMILING_EYES(Keys.chord(":smiling face with open", Keys.ARROW_RIGHT, Keys.ARROW_RIGHT)),
+        SMILING_FACE_WITH_OPEN_MOUTH_AND_CLOSED_EYES(Keys.chord(":smiling face with open", Keys.RIGHT)),
+        SMILING_FACE_WITH_HEART_EYES(Keys.chord(":smiling face with heart")),
+        FACE_BLOWING_KISS(Keys.chord(":face blowing")),
+        MIDDLE_FINGER(Keys.chord(":middle")),
+        FACE_WITH_SYMBOLS_OVER_THE_MOUTH(Keys.chord(":face with symbols")),
+        GRINNING_FACE(Keys.chord(":grinning face")),
+        GRINNING_FACE_WITH_SMILING_EYES(Keys.chord(":grinning face with"));
 
         private final String sequence;
 
-        Emoji(String sequence) {
+        Emoji(final String sequence) {
             this.sequence = sequence;
         }
 
@@ -181,15 +230,15 @@ public class WhatsAppHelper {
         long startTime = System.currentTimeMillis();
         final float totalInSeconds = 22;
         final long total = 100;
-        long curserPosition = Console.writeAtEnd("");
-        Console.writeLine();
-        ProgressBar.printProgress(startTime, total, 0, curserPosition);
-        client.search(identifier, ChronoConstants.DURATION_OF_5_SECONDS);
-        ProgressBar.printProgress(startTime, total, Math.round(5 * total / totalInSeconds), curserPosition);
-        client.waitForTimeOut(ChronoConstants.DURATION_OF_1_SECOND);
-        ProgressBar.printProgress(startTime, total, Math.round(6 * total / totalInSeconds), curserPosition);
+        Console.writeLine("Start sending Message process.");
+        final long curserPosition = Console.writeAtEnd("");
         boolean notInContactList;
         try {
+            ProgressBar.printProgress(startTime, total, 0, curserPosition);
+            client.search(identifier, ChronoConstants.DURATION_OF_5_SECONDS);
+            ProgressBar.printProgress(startTime, total, Math.round(5 * total / totalInSeconds), curserPosition);
+            client.waitForTimeOut(ChronoConstants.DURATION_OF_1_SECOND);
+            ProgressBar.printProgress(startTime, total, Math.round(6 * total / totalInSeconds), curserPosition);
             WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_1_SECOND);
             ProgressBar.printProgress(startTime, total, Math.round(7 * total / totalInSeconds), curserPosition);
             Optional<ChatListBean> optionalChatListBean = WhatsAppHelper
@@ -214,21 +263,20 @@ public class WhatsAppHelper {
             LOGGER.trace("Error", ex);
             notInContactList = true;
         }
-
+        ProgressBar.printProgress(startTime, total, Math.round(8 * total / totalInSeconds), curserPosition);
+        Console.writeLine();
         if (notInContactList) {
             if (!identifier.matches("^[+0-9]+")) {
                 throw new NotAPhoneNumberException("The identifier '" + identifier + "' was neither found in your contacts nor is it a valid phone number.");
             }
             client.open(identifier);
             try {
-                ProgressBar.printProgress(startTime, total, Math.round(8 * total / totalInSeconds), curserPosition);
                 client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
             } catch (TimeoutWhatsAppWebException ex) {
                 LOGGER.trace("No Textbox found", ex);
                 handlePossiblePopUpDialog(client);
             }
         } else {
-            ProgressBar.printProgress(startTime, total, Math.round(8 * total / totalInSeconds), curserPosition);
             client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
         }
         ProgressBar.printProgress(startTime, total, Math.round(18 * total / totalInSeconds), curserPosition);
@@ -236,6 +284,25 @@ public class WhatsAppHelper {
         ProgressBar.printProgress(startTime, total, Math.round(21 * total / totalInSeconds), curserPosition);
         client.waitForTimeOut(ChronoConstants.DURATION_OF_500_MILLIS);
         ProgressBar.printProgress(startTime, total, total, curserPosition);
+        Console.writeLine();
+    }
+
+    public static String makeBlocksIfNecessary(String textFieldContent, String origText) {
+        int fullSize = textFieldContent.length() + origText.length();
+        if (WhatsAppHelper.MAX_TEXTBOX_CHAR_SIZE <= fullSize) {
+            StringBuilder sb = new StringBuilder(origText);
+            int index = 0;
+            int textFieldContentLength = textFieldContent.length();
+            while (index < sb.length()) {
+                int spaceLeftForBlock = Math.min(sb.length(), index + WhatsAppHelper.MAX_TEXTBOX_CHAR_SIZE - textFieldContentLength);
+                sb.insert(Math.min(index + spaceLeftForBlock, sb.length()), '\n');
+                index = spaceLeftForBlock + 1;
+                //set textfield content to 0 because it is only relevant for the first Block.
+                textFieldContentLength = 0;
+            }
+            return sb.toString();
+        }
+        return origText;
     }
 
     private static void handlePossiblePopUpDialog(final WhatsAppWebClient client) throws PopUpDialogAvailableException {

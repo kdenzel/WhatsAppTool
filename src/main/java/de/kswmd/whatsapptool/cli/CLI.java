@@ -80,6 +80,7 @@ public class CLI {
         commands.add(new CommandSend(client));
         commands.add(new CommandOpen(client));
         commands.add(new CommandSetText(client));
+        commands.add(new CommandSendMessage(client));
         commands.add(new CommandShowText(client));
         commands.add(new CommandCheckLogin(client));
         commands.add(new CommandPauseJob());
@@ -93,7 +94,10 @@ public class CLI {
         commands.add(new CommandClear());
         commands.add(new CommandRefresh(client));
         commands.add(new CommandPrintDOM(client));
-        commands.add(new CommandReloadNotifications(MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile()), client));
+        commands.add(new CommandReloadNotifications(
+                MessageFileDatabase.create(Settings.getInstance().getNotificationsXMLFile()),
+                client
+        ));
         commands.add(new CommandSearchContacts(client));
         Console.initLineReader(
                 commands
@@ -153,7 +157,7 @@ public class CLI {
         } catch (NumberFormatException ex) {
             LOGGER.debug("This is unexpected...", ex);
         }
-        
+
         if (!running) {
             final long timeoutInSeconds = ChronoConstants.DURATION_OF_5_SECONDS.toSeconds();
             LOGGER.info("Couldn't load Chats and Contacts. Check if QR-Code is visible. Timeout = " + timeoutInSeconds);

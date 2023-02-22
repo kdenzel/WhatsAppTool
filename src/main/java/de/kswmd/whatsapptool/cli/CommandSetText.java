@@ -26,7 +26,6 @@ package de.kswmd.whatsapptool.cli;
 import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
 import de.kswmd.whatsapptool.WhatsAppWebClient;
 import java.util.Optional;
-import java.util.logging.Level;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

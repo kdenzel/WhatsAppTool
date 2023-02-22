@@ -24,7 +24,6 @@
 package de.kswmd.whatsapptool;
 
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
-import de.kswmd.whatsapptool.cli.Console;
 import de.kswmd.whatsapptool.contacts.ChatListBean;
 import static de.kswmd.whatsapptool.contacts.ChatListBean.Type.CONTACT;
 import de.kswmd.whatsapptool.contacts.Entity;
@@ -32,20 +31,27 @@ import de.kswmd.whatsapptool.contacts.MessageFileDatabase;
 import de.kswmd.whatsapptool.quartz.ScheduleManager;
 import de.kswmd.whatsapptool.selenium.WebDriverFactory;
 import static de.kswmd.whatsapptool.selenium.WebDriverFactory.Browser.CHROME;
+import de.kswmd.whatsapptool.text.MessageParser;
+import de.kswmd.whatsapptool.utils.ChronoConstants;
+import de.kswmd.whatsapptool.utils.FormatterConstants;
 import de.kswmd.whatsapptool.utils.PathResolver;
 import de.kswmd.whatsapptool.utils.Settings;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,6 +59,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.quartz.SimpleScheduleBuilder;
@@ -75,6 +82,7 @@ public class WhatsAppWebClientTest {
     static {
         System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         LOGGER = LogManager.getLogger();
+        Configurator.setLevel("de.kswmd.whatsapptool", org.apache.logging.log4j.Level.DEBUG);
     }
 
     public WhatsAppWebClientTest() {
@@ -104,20 +112,61 @@ public class WhatsAppWebClientTest {
     }
 
     //@Test
-    public void testSendingEmojis() {
-        String emoji = Emoji.GRINNING_FACE.getSequence();
-        LOGGER.info(emoji);
-        client.open(Settings.getInstance().getAdminPhoneNumber());
+    public void testSendMessage() {
+        for (int i = 0; i < 1; i++) {
+            try {
+                client.open();
+                client.waitForTimeOut(5);
+                String content = MessageParser.DEFAULT_PARSER.format("[file:logs/test.txt]").replaceAll("\n", WhatsAppHelper.SHIFT_ENTER);
+                WhatsAppHelper.sendMessage(Settings.getInstance().getAdminPhoneNumber(), content, client);
+            } catch (Exception ex) {
+                LOGGER.error("", ex);
+            }
+            client.waitForTimeOut(ChronoConstants.DURATION_OF_5_SECONDS);
+        }
+    }
 
+    // @Test
+    public void testSendMessage2() {
+        for (int i = 0; i < 1; i++) {
+            try {
+                client.open();
+                client.waitForTimeOut(5);
+                StringBuilder sb = new StringBuilder();
+                sb.append("Aha was soll das ");
+                sb.append(Emoji.SMILING_FACE_WITH_OPEN_MOUTH_AND_CLOSED_EYES.getSequence());
+                sb.append("Blablkabluasodfhasdojfbo ");
+                sb.append(Emoji.GRINNING_FACE_WITH_SMILING_EYES.getSequence());
+                sb.append(" ☹️HA");
+                WhatsAppHelper.sendMessage(Settings.getInstance().getAdminPhoneNumber(), sb.toString(), client);
+            } catch (Exception ex) {
+                LOGGER.error("", ex);
+            }
+            client.waitForTimeOut(ChronoConstants.DURATION_OF_5_SECONDS);
+        }
+    }
+
+    //@Test
+    public void testSendingEmojis() {
+        Emoji[] emojis = Emoji.values();
+        LOGGER.info(Arrays.toString(emojis));
+        client.open(Settings.getInstance().getAdminPhoneNumber());
         try {
-            client.setText(emoji, Duration.ofSeconds(10));
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("Sende emojis : hier ein colon : da ein colon");
+            for (Emoji e : emojis) {
+                sb.append(e.getSequence());
+            }
+            client.setText(sb.toString(), Duration.ofSeconds(10));
             //client.send(3);
             assertTrue(true);
         } catch (Exception ex) {
             LOGGER.error("", ex);
             assertTrue(false);
         }
-        client.waitForTimeOut(1);
+
+        client.waitForTimeOut(5);
     }
 
     //@Test
@@ -180,24 +229,25 @@ public class WhatsAppWebClientTest {
         }
     }
 
-    //@Test
+    @Test
     public void testCustomExceptions() throws NoSuchWhatsAppWebElementException {
+        LocalDateTime now = LocalDateTime.now();
         try {
-            client.appendText("test");
-        } catch (TimeoutWhatsAppWebException ex) {
+            client.open(Settings.getInstance().getAdminPhoneNumber());
+            client.waitForTimeOut(10);
+            LocalDateTime yesterday = now.minusDays(1);
+            String logFilePath = System.getProperty(MiscConstants.KEY_LOG_FILE_PATH);
+            String fileToRead = "fileLengthTest.txt";
+            //String content = Files.readString(Paths.get(logFilePath + "/" + fileToRead)).replaceAll("\n", WhatsAppHelper.SHIFT_ENTER);
+            //content = MessageParser.DEFAULT_PARSER.format(content);
+            String fileText = Files.readString(Path.of("./logs/2023-02/app-02-17-2023.log.txt"));
+            String text = "	at com.sun.org.apache.xerces.internal.util.ErrorHandlerWrapper.createSAXParseException(ErrorHandlerWrapper.java:204) ~[?:?]".replaceAll("\n", WhatsAppHelper.SHIFT_ENTER).replaceAll(" ", " ");
+            client.appendText(text, ChronoConstants.DURATION_OF_10_SECONDS);
+            client.send(ChronoConstants.DURATION_OF_2_SECONDS);
+        } catch (Exception ex) {
             LOGGER.error("", ex);
         }
-    }
-    
-    //@Test
-    public void testSendMessage(){
-        try {
-            client.open();
-            client.waitForTimeOut(10);
-            WhatsAppHelper.sendMessage("+491605768854", "Dies ist eine automatisierte Testnachricht", client);
-        } catch (TimeoutWhatsAppWebException | PopUpDialogAvailableException ex) {
-            java.util.logging.Logger.getLogger(WhatsAppWebClientTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        client.waitForTimeOut(ChronoConstants.DURATION_OF_10_SECONDS);
     }
 
 }

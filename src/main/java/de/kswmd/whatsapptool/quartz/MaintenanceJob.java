@@ -24,12 +24,12 @@
 package de.kswmd.whatsapptool.quartz;
 
 import de.kswmd.whatsapptool.MiscConstants;
-import de.kswmd.whatsapptool.PopUpDialogAvailableException;
-import de.kswmd.whatsapptool.TimeoutWhatsAppWebException;
 import de.kswmd.whatsapptool.WhatsAppHelper;
-import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
+import de.kswmd.whatsapptool.WhatsAppWebClient;
+import de.kswmd.whatsapptool.text.MessageParser;
 import de.kswmd.whatsapptool.utils.FormatterConstants;
+import de.kswmd.whatsapptool.utils.PathResolver;
 import de.kswmd.whatsapptool.utils.Settings;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -52,15 +52,15 @@ import org.quartz.JobExecutionException;
  */
 @DisallowConcurrentExecution
 public class MaintenanceJob implements Job {
-
+    
     private final Logger LOGGER = LogManager.getLogger();
-
+    
     final static String WHATSAPP_CLIENT = "whatsappclient";
-
+    
     public MaintenanceJob() {
         //LOGGER.info("Constructor called...");
     }
-
+    
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         LOGGER.info("Starting MaintenanceJob.");
@@ -76,37 +76,35 @@ public class MaintenanceJob implements Job {
             } catch (UnknownHostException ex) {
                 LOGGER.trace("Hostname not found...", ex);
             }
-            sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER))
+            sb.append(WhatsAppHelper.SHIFT_ENTER)
                     .append("Hostname: ")
                     .append(hostname)
-                    .append(Keys.chord(Keys.SHIFT, Keys.ENTER))
+                    .append(WhatsAppHelper.SHIFT_ENTER)
                     .append("Status OK ")
-                    .append(Emoji.GRINNING_FACE.getSequence());
-            try {
-                LocalDateTime yesterday = now.minusDays(1);
-                String logFilePath = System.getProperty(MiscConstants.KEY_LOG_FILE_PATH);
-                String fileToRead = yesterday.format(FormatterConstants.DATE_FORMAT_YYYY_MM) + "/app-" + yesterday.format(FormatterConstants.DATE_FORMAT_MM_dd_YYYY) + ".message-job-error-log.txt";
-                String content = Files.readString(Paths.get(logFilePath + "/" + fileToRead));
-                content = content.replaceAll("\n", Keys.chord(Keys.SHIFT, Keys.ENTER));
-                sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
-                sb.append(Keys.chord(Keys.SHIFT, Keys.ENTER));
-                if (!StringUtils.trimToEmpty(content).isEmpty()) {
-                    sb.append(content);
-                } else {
-                    sb.append("No jobs executed for yesterday.");
-                }
-            } catch (IOException ex) {
-                LOGGER.error("Couldn't read message-job-error-log.txt...", ex);
+                    .append(WhatsAppHelper.SHIFT_ENTER)
+                    .append(WhatsAppHelper.SHIFT_ENTER)
+                    .append("Test emojis:");
+            for (Emoji emoji : Emoji.values()) {
+                sb.append(WhatsAppHelper.SHIFT_ENTER)
+                        .append("[emoji:")
+                        .append(emoji).append("]");
             }
-            
+            sb.append(WhatsAppHelper.SHIFT_ENTER)
+                    .append("Show status of chronjobs if available.")
+                    .append(WhatsAppHelper.SHIFT_ENTER);
+            LocalDateTime yesterday = now.minusDays(1);
+            String fileToRead = yesterday.format(FormatterConstants.DATE_FORMAT_YYYY_MM)
+                    + "/app-" + yesterday.format(FormatterConstants.DATE_FORMAT_MM_dd_YYYY)
+                    + ".message-job-status-log.txt";
+            sb.append("[file:logs/").append(fileToRead).append("]");
             try {
                 LOGGER.info("Start sending status report.");
-                WhatsAppHelper.sendMessage(adminPhoneNumber,sb.toString(), client);
+                //String content = sb.toString();
+                WhatsAppHelper.sendMessage(adminPhoneNumber, MessageParser.DEFAULT_PARSER.format(sb.toString()), client);
                 LOGGER.info("Successfully sent status report.");
             } catch (Exception ex) {
                 LOGGER.error("Job execution failed... \n" + adminPhoneNumber + "\n", ex);
             }
         }
     }
-
 }
