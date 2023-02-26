@@ -104,7 +104,7 @@ public class ProgressBar implements Runnable {
             t.join();
         } catch (InterruptedException ex) {
         }
-        Console.writeLine();
+        Console.writeAtEnd("");
     }
 
     public boolean isFinished() {
@@ -199,10 +199,10 @@ public class ProgressBar implements Runnable {
     public static void main(String[] args) {
         System.setProperty(MiscConstants.KEY_LOG_FILE_PATH, PathResolver.getJarFilePathOrWorkingDirectory().toString() + "/logs");
         Console.initLineReader(args);
-        ProgressBar p1 = ProgressBar.getTimerBasedProgressBar(800, ChronoUnit.SECONDS);
-        p1.start();
-        ProgressBar p2 = ProgressBar.getTimerBasedProgressBar(1000 * 400, ChronoUnit.MILLIS);
-        p2.start();
+        ProgressBar p1 = ProgressBar.getTimerBasedProgressBar(20, ChronoUnit.SECONDS);
+        p1.start("AHA\n");
+        ProgressBar p2 = ProgressBar.getTimerBasedProgressBar(1000 * 10, ChronoUnit.MILLIS);
+        p2.start("\nSOSO\n");
 
         long lt = System.currentTimeMillis();
         while (true) {
@@ -210,7 +210,7 @@ public class ProgressBar implements Runnable {
                 String rl = Console.readLine();
                 long ct = System.currentTimeMillis();
                 if (ct > lt + 5000) {
-                    Console.write("SOSO");
+                    //Console.write("SOSO");
                     lt = ct;
                 }
 

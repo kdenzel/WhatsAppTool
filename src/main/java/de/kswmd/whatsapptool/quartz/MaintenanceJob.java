@@ -23,24 +23,18 @@
  */
 package de.kswmd.whatsapptool.quartz;
 
-import de.kswmd.whatsapptool.MiscConstants;
 import de.kswmd.whatsapptool.WhatsAppHelper;
 import de.kswmd.whatsapptool.WhatsAppHelper.Emoji;
 import de.kswmd.whatsapptool.WhatsAppWebClient;
 import de.kswmd.whatsapptool.text.MessageParser;
 import de.kswmd.whatsapptool.utils.FormatterConstants;
-import de.kswmd.whatsapptool.utils.PathResolver;
 import de.kswmd.whatsapptool.utils.Settings;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.Keys;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -100,7 +94,7 @@ public class MaintenanceJob implements Job {
             try {
                 LOGGER.info("Start sending status report.");
                 //String content = sb.toString();
-                WhatsAppHelper.sendMessage(adminPhoneNumber, MessageParser.DEFAULT_PARSER.format(sb.toString()), client);
+                WhatsAppHelper.sendMessage(adminPhoneNumber, MessageParser.DEFAULT_PARSER.format(sb.toString()).replaceAll("\n", WhatsAppHelper.SHIFT_ENTER), client);
                 LOGGER.info("Successfully sent status report.");
             } catch (Exception ex) {
                 LOGGER.error("Job execution failed... \n" + adminPhoneNumber + "\n", ex);

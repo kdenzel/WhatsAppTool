@@ -63,7 +63,7 @@ public class CommandSendMessage extends Command {
                 LOGGER.error("Couldn't send message.", ex);
             }
         } else {
-            LOGGER.info("Missing identifier.");
+            LOGGER.info("Missing identifier or empty message.");
         }
         return Optional.empty();
     }

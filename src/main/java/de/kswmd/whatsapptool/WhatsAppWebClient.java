@@ -57,6 +57,21 @@ public class WhatsAppWebClient {
 
     public static final String WHATSAPP_WEB_URI = "web.whatsapp.com";
 
+    public static final By XPATH_DIV_SEARCH_TEXTBOX = By.xpath("//div[@role='textbox'][@data-testid='chat-list-search']");
+    public static final By XPATH_SPAN_CONVERSATION_INFO_HEADER = By.xpath("//span[@data-testid='conversation-info-header-chat-title']");
+    public static final By XPATH_BUTTON_SEND = By.xpath("//button[@data-testid='compose-btn-send']");
+    public static final By XPATH_CANVAS_QR_CODE_ELEMENT = By.xpath("//canvas[@role='img']");
+    public static final By XPATH_DIV_CHAT_LIST = By.xpath("//div[@data-testid='chat-list']");
+    public static final By XPATH_SPAN_ALERT_UPDATE = By.xpath("//span[@data-testid='alert-update']");
+    public static final By XPATH_PROGRESS_STARTUP = By.xpath("//progress[not(@dir='ltr')]");
+    public static final By XPATH_DIV_CONFIRM_POPUP = By.xpath("//div[@data-testid='confirm-popup']");
+    public static final By XPATH_SPAN_UNDREAD_COUNT = By.xpath("//span[@data-testid='icon-unread-count']");
+    public static final By XPATH_DIV_CHAT_TEXTBOX = By.xpath("//div[@role='textbox'][@data-testid='conversation-compose-box-input']");
+    public static final By XPATH_ANCESTOR_DIV_LIST_ITEM = By.xpath("./ancestor::div[contains(@data-testid,'list-item-')]");
+    public static final By XPATH_LI_EMOJI_VARIANT = By.xpath("//li[@data-testid='mi-emoji-variant']");
+
+    private static final By XPATH_RELATIVE_SPAN_DIV_CHAT_TEXTBOX_TEXT = By.xpath("./p/span");
+
     private final WebDriver driver;
 
     /**
@@ -119,8 +134,7 @@ public class WhatsAppWebClient {
     }
 
     public WebElement getConversationTextField(Duration timeout) throws TimeoutWhatsAppWebException {
-        String xPath = "//div[@role='textbox'][@data-testid='conversation-compose-box-input']";
-        return getElement(By.xpath(xPath), timeout);
+        return getElement(XPATH_DIV_CHAT_TEXTBOX, timeout);
     }
 
     /**
@@ -167,12 +181,17 @@ public class WhatsAppWebClient {
                 }
                 //print the emoji sequence
                 textField.sendKeys(emoji.getSequence());
-                long ts = System.currentTimeMillis() + 50;
-                //Wait some time before sending Enter after the emoji sequence was printed.
-                //It is necessary for the popup in the frontend.
-                while (ts > System.currentTimeMillis());
-                //press enter
+                //wait 10 millis before sending enter.
+                long ts = System.currentTimeMillis() + 10;
+                while (ts < System.currentTimeMillis());
                 textField.sendKeys(Keys.ENTER);
+                //select first available variant of emoji if it pops up.
+                try {
+                    WebElement firstEmojiVariant = getElement(XPATH_LI_EMOJI_VARIANT, Duration.ZERO);
+                    firstEmojiVariant.click();
+                } catch (TimeoutWhatsAppWebException ex) {
+                    LOGGER.trace("No emoji variant popup found for emoji.");
+                }
             } catch (IllegalArgumentException ex) {
                 LOGGER.fatal("How is this even possible?"
                         + " This should never be shown to the user because the match sequence is unknown."
@@ -181,6 +200,7 @@ public class WhatsAppWebClient {
             }
             index = matcher.end();
             progress = index;
+            ProgressBar.printProgress(startTime, total, progress, curserPosition);
         }
         //##########end ugly hack for sending emojis###########################
         //Send the rest of the string or if no emoji available send the text.
@@ -205,7 +225,7 @@ public class WhatsAppWebClient {
         int index = 0;
         while (index < text.length()) {
             int textFieldSize = textField.getText().length();
-            int freeSpaceInCurrentBlock = WhatsAppHelper.MAX_TEXTBOX_CHAR_SIZE - textFieldSize;
+            int freeSpaceInCurrentBlock = Math.max(0, WhatsAppHelper.MAX_TEXTBOX_CHAR_SIZE - textFieldSize);
             int maxJunkSize = Math.min(freeSpaceInCurrentBlock, junkBufferSize);
             int endIndex = Math.min(index + maxJunkSize, text.length());
             String junk = text.substring(index, endIndex);
@@ -248,8 +268,7 @@ public class WhatsAppWebClient {
     }
 
     public WebElement getSearchTextBox(Duration timeout) throws TimeoutWhatsAppWebException {
-        String xPath = "//div[@role='textbox'][@data-testid='chat-list-search']";
-        return getElement(By.xpath(xPath), timeout);
+        return getElement(XPATH_DIV_SEARCH_TEXTBOX, timeout);
     }
 
     public void clearConversationTextBox() throws TimeoutWhatsAppWebException {
@@ -263,12 +282,11 @@ public class WhatsAppWebClient {
     }
 
     public String getTextContent() throws TimeoutWhatsAppWebException, NoSuchWhatsAppWebElementException {
-        String xPathRelativeToConversationTextField = "./p/span";
         try {
-            WebElement conversationTextBox = getConversationTextField(Duration.ZERO).findElement(By.xpath(xPathRelativeToConversationTextField));
+            WebElement conversationTextBox = getConversationTextField(Duration.ZERO).findElement(XPATH_RELATIVE_SPAN_DIV_CHAT_TEXTBOX_TEXT);
             return conversationTextBox.getText();
         } catch (NoSuchElementException ex) {
-            throw new NoSuchWhatsAppWebElementException("No element '" + xPathRelativeToConversationTextField + "' found in conversation text box.", ex);
+            throw new NoSuchWhatsAppWebElementException("No element '" + XPATH_RELATIVE_SPAN_DIV_CHAT_TEXTBOX_TEXT + "' found in conversation text box.", ex);
         }
     }
 
@@ -282,8 +300,7 @@ public class WhatsAppWebClient {
     }
 
     public WebElement getConversationInfoHeader(Duration timeout) throws TimeoutWhatsAppWebException {
-        String xPath = "//span[@data-testid='conversation-info-header-chat-title']";
-        return getElement(By.xpath(xPath), timeout);
+        return getElement(XPATH_SPAN_CONVERSATION_INFO_HEADER, timeout);
     }
 
     public WebElement getSendButton() throws TimeoutWhatsAppWebException {
@@ -291,8 +308,7 @@ public class WhatsAppWebClient {
     }
 
     public WebElement getSendButton(Duration timeout) throws TimeoutWhatsAppWebException {
-        String xPath = "//button[@data-testid='compose-btn-send']";
-        return getElement(By.xpath(xPath), timeout);
+        return getElement(XPATH_BUTTON_SEND, timeout);
     }
 
     /**
@@ -317,7 +333,7 @@ public class WhatsAppWebClient {
 
     public boolean isQRCodeVisible(Duration timeout) {
         try {
-            WebElement qrCode = getElement(By.xpath("//canvas[@role='img']"), timeout);
+            WebElement qrCode = getElement(XPATH_CANVAS_QR_CODE_ELEMENT, timeout);
             LOGGER.trace(WhatsAppHelper.getAttributesOfElement(driver, qrCode));
             return true;
         } catch (TimeoutWhatsAppWebException ex) {
@@ -332,8 +348,8 @@ public class WhatsAppWebClient {
 
     public boolean openChatWithUnreadNotification() {
         try {
-            WebElement span = getElement(By.xpath("//span[@data-testid='icon-unread-count']"), Duration.ZERO);
-            WebElement listItem = span.findElement(By.xpath("./ancestor::div[contains(@data-testid,'list-item-')]"));
+            WebElement span = getElement(XPATH_SPAN_UNDREAD_COUNT, Duration.ZERO);
+            WebElement listItem = span.findElement(XPATH_ANCESTOR_DIV_LIST_ITEM);
             LOGGER.trace(WhatsAppHelper.getAttributesOfElement(driver, listItem));
             listItem.click();
             return true;
@@ -345,7 +361,7 @@ public class WhatsAppWebClient {
 
     public List<WebElement> getSpansWithUnreadNotification() {
         try {
-            return getElements(By.xpath("//span[@data-testid='icon-unread-count']"), Duration.ZERO);
+            return getElements(XPATH_SPAN_UNDREAD_COUNT, Duration.ZERO);
         } catch (TimeoutWhatsAppWebException ex) {
             LOGGER.trace("Couldn't find a list element with icon-unread-count.", ex);
         }
@@ -353,7 +369,7 @@ public class WhatsAppWebClient {
     }
 
     public WebElement getChatList(Duration timeout) throws TimeoutWhatsAppWebException {
-        WebElement chatlist = getElement(By.xpath("//div[@data-testid='chat-list']"), timeout);
+        WebElement chatlist = getElement(XPATH_DIV_CHAT_LIST, timeout);
         return chatlist;
     }
 
@@ -384,15 +400,15 @@ public class WhatsAppWebClient {
     }
 
     public WebElement getAlertUpdate() throws TimeoutWhatsAppWebException {
-        return getElement(By.xpath("//span[@data-testid='alert-update']"), Duration.ZERO);
+        return getElement(XPATH_SPAN_ALERT_UPDATE, Duration.ZERO);
     }
 
     public WebElement getStartUpProgressBar(long timeoutInMillis) throws TimeoutWhatsAppWebException {
-        return getElement(By.xpath("//progress[not(@dir='ltr')]"), Duration.ofMillis(timeoutInMillis));
+        return getElement(XPATH_PROGRESS_STARTUP, Duration.ofMillis(timeoutInMillis));
     }
 
     public WebElement getStartUpProgressBar(Duration timeout) throws TimeoutWhatsAppWebException {
-        return getElement(By.xpath("//progress[not(@dir='ltr')]"), timeout);
+        return getElement(XPATH_PROGRESS_STARTUP, timeout);
     }
 
     public void waitForTimeOut(long seconds) {
@@ -422,7 +438,7 @@ public class WhatsAppWebClient {
     }
 
     public boolean isAlertPresent() {
-        boolean foundAlert = false;
+        boolean foundAlert;
         WebDriverWait wait = new WebDriverWait(driver, Duration.ZERO);
         try {
             wait.until(ExpectedConditions.alertIsPresent());
@@ -435,7 +451,7 @@ public class WhatsAppWebClient {
     }
 
     public WebElement getPopUp(Duration duration) throws TimeoutWhatsAppWebException {
-        return getElement(By.xpath("//div[@data-testid='confirm-popup']"), duration);
+        return getElement(XPATH_DIV_CONFIRM_POPUP, duration);
     }
 
     public void acceptAlert() {

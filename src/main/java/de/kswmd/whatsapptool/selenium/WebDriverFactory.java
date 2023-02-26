@@ -93,8 +93,8 @@ public final class WebDriverFactory {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--user-data-dir=" + userDataDir);
         if (!withGui) {
-            options.addArguments("--headless", "--disable-gpu", "--nogpu", "--window-size=1920,1080", "--ignore-certificate-errors", "--no-sandbox", "--enable-javascript");
-            //options.addArguments("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+            options.addArguments("--headless=new", "--disable-gpu", "--nogpu", "--window-size=1920,1080", "--ignore-certificate-errors", "--no-sandbox", "--enable-javascript");
+            options.addArguments("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36");
         }
         WebDriver driver = new ChromeDriver(options);
         Object userAgent = ((ChromeDriver) driver).executeScript("return navigator.userAgent;");

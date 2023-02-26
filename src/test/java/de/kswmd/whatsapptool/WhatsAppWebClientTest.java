@@ -33,13 +33,9 @@ import de.kswmd.whatsapptool.selenium.WebDriverFactory;
 import static de.kswmd.whatsapptool.selenium.WebDriverFactory.Browser.CHROME;
 import de.kswmd.whatsapptool.text.MessageParser;
 import de.kswmd.whatsapptool.utils.ChronoConstants;
-import de.kswmd.whatsapptool.utils.FormatterConstants;
 import de.kswmd.whatsapptool.utils.PathResolver;
 import de.kswmd.whatsapptool.utils.Settings;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -59,7 +55,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.quartz.SimpleScheduleBuilder;
@@ -169,8 +164,10 @@ public class WhatsAppWebClientTest {
         client.waitForTimeOut(5);
     }
 
-    //@Test
+    @Test
     public void testMaintenanceChronJob() {
+        client.open();
+        client.waitForTimeOut(ChronoConstants.DURATION_OF_10_SECONDS);
         assertTrue(scheduleManager.start());
         scheduleManager.scheduleMaintenanceJob(client, SimpleScheduleBuilder.simpleSchedule());
         try {
@@ -179,6 +176,7 @@ public class WhatsAppWebClientTest {
             LOGGER.error("Error", ex);
         }
         assertTrue(scheduleManager.stop());
+        client.waitForTimeOut(ChronoConstants.DURATION_OF_10_SECONDS);
     }
 
     //@Test
@@ -229,21 +227,15 @@ public class WhatsAppWebClientTest {
         }
     }
 
-    @Test
-    public void testCustomExceptions() throws NoSuchWhatsAppWebElementException {
+    //@Test
+    public void testMessage() throws NoSuchWhatsAppWebElementException {
         LocalDateTime now = LocalDateTime.now();
         try {
             client.open(Settings.getInstance().getAdminPhoneNumber());
             client.waitForTimeOut(10);
-            LocalDateTime yesterday = now.minusDays(1);
-            String logFilePath = System.getProperty(MiscConstants.KEY_LOG_FILE_PATH);
-            String fileToRead = "fileLengthTest.txt";
-            //String content = Files.readString(Paths.get(logFilePath + "/" + fileToRead)).replaceAll("\n", WhatsAppHelper.SHIFT_ENTER);
-            //content = MessageParser.DEFAULT_PARSER.format(content);
-            String fileText = Files.readString(Path.of("./logs/2023-02/app-02-17-2023.log.txt"));
-            String text = "	at com.sun.org.apache.xerces.internal.util.ErrorHandlerWrapper.createSAXParseException(ErrorHandlerWrapper.java:204) ~[?:?]".replaceAll("\n", WhatsAppHelper.SHIFT_ENTER).replaceAll(" ", " ");
-            client.appendText(text, ChronoConstants.DURATION_OF_10_SECONDS);
-            client.send(ChronoConstants.DURATION_OF_2_SECONDS);
+            WhatsAppHelper.sendMessage(Settings.getInstance().getAdminPhoneNumber(),
+                    MessageParser.DEFAULT_PARSER.format("[file:messages/problemLog.txt]").replaceAll("\n", WhatsAppHelper.SHIFT_ENTER),
+                    client);
         } catch (Exception ex) {
             LOGGER.error("", ex);
         }

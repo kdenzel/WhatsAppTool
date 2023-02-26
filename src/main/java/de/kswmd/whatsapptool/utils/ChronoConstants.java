@@ -35,6 +35,7 @@ public final class ChronoConstants {
     /**
      * Millis
      */
+    public static final Duration DURATION_OF_50_MILLIS = Duration.ofMillis(50);
     public static final Duration DURATION_OF_500_MILLIS = Duration.ofMillis(500);
     /**
      * Seconds

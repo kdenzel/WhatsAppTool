@@ -158,7 +158,7 @@ public final class Console extends AbstractAppender {
             }
         }
         int count = StringUtils.countMatches(s, LINE_BREAK);
-        instance.addToCurserPositionNumber(count);
+        instance.addToCursorPositionNumber(count);
         instance.addToLineNumber(count);
         writeRaw(cursorMovement + specialCodeBefore + output + specialCodeAfter);
     }
@@ -294,16 +294,22 @@ public final class Console extends AbstractAppender {
      * @param movement
      */
     public static synchronized void writeAndMoveCursor(int cursorOffset, String specialCodeBefore, Object append, String specialCodeAfter, CursorMovement movement) {
+        String m;
         switch (movement) {
             case UP:
                 instance.setCursorPosition((instance.cursorPosition - cursorOffset));
-                write(Console.getMoveCursorUpString(cursorOffset), specialCodeBefore, append, specialCodeAfter);
+                m = Console.getMoveCursorUpString(cursorOffset);
+                //write(m,Console.getEraseLineString(),"",specialCodeAfter);
+                write(m, specialCodeBefore, append, specialCodeAfter);
                 break;
             case DOWN:
                 instance.setCursorPosition((instance.cursorPosition + cursorOffset));
-                write(Console.getMoveCursorDownString(cursorOffset), specialCodeBefore, append, specialCodeAfter);
+                m = Console.getMoveCursorDownString(cursorOffset);
+                //write(m,Console.getEraseLineString(),"",specialCodeAfter);
+                write(m, specialCodeBefore, append, specialCodeAfter);
                 break;
             default:
+                //write(Console.getEraseLineString(),specialCodeBefore,"",specialCodeAfter);
                 write("", specialCodeBefore, append, specialCodeAfter);
                 break;
         }
@@ -325,13 +331,18 @@ public final class Console extends AbstractAppender {
      * @throws UserInterruptException
      */
     public static String readLine() throws UserInterruptException {
-        long cursorPos = instance.setCursorDown();
+        long cursorPos = Console.writeAtEnd(Console.getEraseLineString(), "", "");
         String lineNumber = instance.showLines ? CARRIAGE_RETURN + String.format(LINE_NUMBER_FORMAT, cursorPos) + LINE_PREFIX : "";
         LocalTime lt = LocalTime.now();
         String line = instance.lineReader.readLine(lineNumber + lt.format(FormatterConstants.TIME_FORMAT_HH_mm_ss_SSS) + " " + PROMPT);
-        instance.addToCurserPositionNumber(1);
-        instance.addToLineNumber(1);
+        addToLineNumberAndCursorPosition(1);
         return line;
+    }
+
+    public static synchronized long addToLineNumberAndCursorPosition(int i) {
+        instance.addToCursorPositionNumber(i);
+        instance.addToLineNumber(i);
+        return getCursorPosition();
     }
 
     /**
@@ -537,7 +548,7 @@ public final class Console extends AbstractAppender {
      *
      * @param lines
      */
-    private void addToCurserPositionNumber(int lines) {
+    private void addToCursorPositionNumber(int lines) {
         cursorPosition = cursorPosition + lines;
     }
 

@@ -169,6 +169,7 @@ public class CLI {
             try {
                 line = Console.readLine();
             } catch (UserInterruptException ex) {
+                Console.addToLineNumberAndCursorPosition(1);
                 LOGGER.trace("User pressed CTRL+C", ex);
                 line = Command.COMMAND_EXIT;
             }

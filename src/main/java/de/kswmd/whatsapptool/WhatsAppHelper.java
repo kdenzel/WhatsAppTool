@@ -91,26 +91,32 @@ public class WhatsAppHelper {
      * popup dialog can appear.
      */
     public enum Emoji {
-        ROFL(Keys.chord(":floor")),
-        FACE_WITH_TEARS_OF_JOY(Keys.chord(":face with tears of joy")),
-        CRAZY_FACE(Keys.chord(":crazy face")),
-        SMILING_FACE_WITH_OPEN_MOUTH_AND_SMILING_EYES(Keys.chord(":smiling face with open", Keys.ARROW_RIGHT, Keys.ARROW_RIGHT)),
-        SMILING_FACE_WITH_OPEN_MOUTH_AND_CLOSED_EYES(Keys.chord(":smiling face with open", Keys.RIGHT)),
-        SMILING_FACE_WITH_HEART_EYES(Keys.chord(":smiling face with heart")),
-        FACE_BLOWING_KISS(Keys.chord(":face blowing")),
-        MIDDLE_FINGER(Keys.chord(":middle")),
-        FACE_WITH_SYMBOLS_OVER_THE_MOUTH(Keys.chord(":face with symbols")),
-        GRINNING_FACE(Keys.chord(":grinning face")),
-        GRINNING_FACE_WITH_SMILING_EYES(Keys.chord(":grinning face with"));
+        ROFL(":floor", "🤣"),
+        FACE_WITH_TEARS_OF_JOY(":face with tears of joy", "😂"),
+        CRAZY_FACE(":crazy face", "🤪"),
+        SMILING_FACE_WITH_OPEN_MOUTH_AND_SMILING_EYES(Keys.chord(":smiling face with open", Keys.ARROW_RIGHT, Keys.ARROW_RIGHT), "😄"),
+        SMILING_FACE_WITH_OPEN_MOUTH_AND_CLOSED_EYES(Keys.chord(":smiling face with open", Keys.RIGHT), "😆"),
+        SMILING_FACE_WITH_HEART_EYES(":smiling face with heart", "😍"),
+        FACE_BLOWING_KISS(":face blowing", "😘"),
+        MIDDLE_FINGER(":middle", "🖕"),
+        FACE_WITH_SYMBOLS_OVER_THE_MOUTH(":face with symbols", "🤬"),
+        GRINNING_FACE(":grinning face", "😀"),
+        GRINNING_FACE_WITH_SMILING_EYES(":grinning face with", "😁");
 
         private final String sequence;
+        private final String emojiStringRepresentation;
 
-        Emoji(final String sequence) {
+        Emoji(final String sequence, final String emojiStringRepresentation) {
             this.sequence = sequence;
+            this.emojiStringRepresentation = emojiStringRepresentation;
         }
 
         public String getSequence() {
             return sequence;
+        }
+
+        public String getEmojiStringRepresentation() {
+            return emojiStringRepresentation;
         }
     }
 
@@ -228,19 +234,20 @@ public class WhatsAppHelper {
      */
     public static synchronized void sendMessage(final String identifier, final String content, final WhatsAppWebClient client) throws TimeoutWhatsAppWebException, PopUpDialogAvailableException, NotAPhoneNumberException {
         long startTime = System.currentTimeMillis();
-        final float totalInSeconds = 22;
+        final float totalInSeconds = 20;
         final long total = 100;
+        final float factor = total / totalInSeconds;
         Console.writeLine("Start sending Message process.");
         final long curserPosition = Console.writeAtEnd("");
         boolean notInContactList;
         try {
             ProgressBar.printProgress(startTime, total, 0, curserPosition);
             client.search(identifier, ChronoConstants.DURATION_OF_5_SECONDS);
-            ProgressBar.printProgress(startTime, total, Math.round(5 * total / totalInSeconds), curserPosition);
+            ProgressBar.printProgress(startTime, total, Math.round(5 * factor), curserPosition);
             client.waitForTimeOut(ChronoConstants.DURATION_OF_1_SECOND);
-            ProgressBar.printProgress(startTime, total, Math.round(6 * total / totalInSeconds), curserPosition);
+            ProgressBar.printProgress(startTime, total, Math.round(6 * factor), curserPosition);
             WebElement chatList = client.getChatList(ChronoConstants.DURATION_OF_1_SECOND);
-            ProgressBar.printProgress(startTime, total, Math.round(7 * total / totalInSeconds), curserPosition);
+            ProgressBar.printProgress(startTime, total, Math.round(7 * factor), curserPosition);
             Optional<ChatListBean> optionalChatListBean = WhatsAppHelper
                     .generateFromWebElement(chatList)
                     .stream()
@@ -263,25 +270,34 @@ public class WhatsAppHelper {
             LOGGER.trace("Error", ex);
             notInContactList = true;
         }
-        ProgressBar.printProgress(startTime, total, Math.round(8 * total / totalInSeconds), curserPosition);
+        ProgressBar.printProgress(startTime, total, Math.round(8 * factor), curserPosition);
         Console.writeLine();
+        String contentWithEnter = content + Keys.ENTER.toString();
         if (notInContactList) {
             if (!identifier.matches("^[+0-9]+")) {
                 throw new NotAPhoneNumberException("The identifier '" + identifier + "' was neither found in your contacts nor is it a valid phone number.");
             }
             client.open(identifier);
             try {
-                client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
+                //Get textbox and wait 10 Seconds for timeout
+                client.getElement(WhatsAppWebClient.XPATH_DIV_CHAT_TEXTBOX, ChronoConstants.DURATION_OF_10_SECONDS);
+                /**
+                 * After textbox is found, wait half a second because of the
+                 * "Begin chat" dialog to disappear. Important if the content
+                 * starts with an emoji. The "begin chat" dialog will prevent
+                 * the emoji dialog to appear.
+                 */
+                client.waitForTimeOut(ChronoConstants.DURATION_OF_500_MILLIS);
+                //then set text.
+                client.setText(contentWithEnter);
             } catch (TimeoutWhatsAppWebException ex) {
                 LOGGER.trace("No Textbox found", ex);
                 handlePossiblePopUpDialog(client);
             }
         } else {
-            client.setText(content, ChronoConstants.DURATION_OF_10_SECONDS);
+            client.setText(contentWithEnter, ChronoConstants.DURATION_OF_10_SECONDS);
         }
-        ProgressBar.printProgress(startTime, total, Math.round(18 * total / totalInSeconds), curserPosition);
-        client.send(ChronoConstants.DURATION_OF_3_SECONDS);
-        ProgressBar.printProgress(startTime, total, Math.round(21 * total / totalInSeconds), curserPosition);
+        ProgressBar.printProgress(startTime, total, Math.round(19 * factor), curserPosition);
         client.waitForTimeOut(ChronoConstants.DURATION_OF_500_MILLIS);
         ProgressBar.printProgress(startTime, total, total, curserPosition);
         Console.writeLine();

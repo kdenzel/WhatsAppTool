@@ -171,11 +171,11 @@ public class MessageParser {
                                 } else {
                                     p = Path.of(itemAttach);
                                 }
-                                LOGGER.debug(p.toAbsolutePath());
+                                LOGGER.debug("Append file: " + p.toAbsolutePath());
                                 String fileText = Files.readString(p);
                                 replacement = fileText;
                             } catch (Exception ex) {
-                                LOGGER.debug("Problem with file " + itemAttach, ex);
+                                LOGGER.debug("Problem with appended file " + itemAttach, ex);
                             }
                         }
                         break;
@@ -189,7 +189,7 @@ public class MessageParser {
                                 } else {
                                     p = Path.of(itemAttach);
                                 }
-                                LOGGER.debug(p.toAbsolutePath());
+                                LOGGER.debug("Attach file: " + p.toAbsolutePath());
                                 String fileText = Files.readString(p);
                                 replacement = format(fileText);
                             } catch (Exception ex) {
